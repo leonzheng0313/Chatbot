@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI群聊 - ChatPersona</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-gentle': 'bounce 1s ease-in-out 3',
+                        'typing': 'typing 1.5s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        typing: {
+                            '0%, 60%, 100%': { opacity: '1' },
+                            '30%': { opacity: '0.4' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4">
+            <div class="flex justify-between items-center py-3 sm:py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">CP</span>
+                    </div>
+                    <h1 class="text-lg sm:text-2xl font-bold text-gray-800">ChatPersona</h1>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <a href="/" class="bg-gray-100 hover:bg-gray-200 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-center">
+                        ← 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主聊天区域 -->
+    <div class="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <!-- 当前参与角色显示 -->
+        <div class="bg-white rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-800">当前聊天角色</h3>
+                <button onclick="showCharacterSelector()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition">
+                    👥 选择角色
+                </button>
+            </div>
+            <div id="selectedCharactersDisplay" class="flex flex-wrap gap-2 sm:gap-3">
+                <div class="text-gray-500 text-sm">请选择要参与聊天的角色</div>
+            </div>
+        </div>
+
+        <!-- 聊天消息区域 -->
+        <div class="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 h-[60vh] sm:h-[500px]">
+            <div class="p-3 sm:p-4 border-b border-gray-200">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-800">AI人格群聊</h3>
+            </div>
+            <div id="chatMessages" class="p-3 sm:p-4 h-[calc(60vh-60px)] sm:h-96 overflow-y-auto">
+                <div id="welcomeMessage" class="text-center text-gray-500 text-sm py-8">
+                    <div class="mb-4">
+                        <div class="text-lg mb-2">💬 欢迎来到AI人格群聊！</div>
+                        <div class="text-gray-400 mb-4">选择角色后开始对话吧~</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mx-4 mb-4">
+                        <div class="text-indigo-600 font-medium mb-2">💡 聊天小贴士</div>
+                        <div class="text-xs text-gray-600 space-y-1">
+                            <div>• 不知道怎么决策问题？试试看问问你的角色们吧~</div>
+                            <div>• 想听听不同观点？让角色们讨论一个话题</div>
+                            <div>• 需要创意灵感？角色们会给你意想不到的想法</div>
+                            <div>• 想要情感支持？角色们会陪伴你聊天解忧</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="bg-white rounded-xl shadow-lg p-3 sm:p-4">
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <input type="text" id="messageInput" placeholder="输入话题或聊天内容..." class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm sm:text-base" onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" id="sendButton" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 sm:px-6 py-3 rounded-lg font-medium transition transform hover:scale-105 text-sm sm:text-base">
+                    发送
+                </button>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button onclick="clearChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition">
+                    清空聊天
+                </button>
+                <button onclick="exportChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition">
+                    导出记录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色选择模态框 -->
+    <div id="characterSelectorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-2 sm:p-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg sm:text-xl font-bold mb-4">选择参与聊天的角色</h3>
+            <div id="charactersList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                <!-- 角色列表将动态加载 -->
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                <button onclick="hideCharacterSelector()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                    取消
+                </button>
+                <button onclick="confirmCharacterSelection()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                    确认选择
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-40 hidden">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">AI正在思考中...</p>
+        </div>
+    </div>
+
+    <script>
+        let allCharacters = [];
+        let selectedCharacterIds = [];
+        let chatHistory = [];
+        let currentTopic = '';
+        let isTyping = false;
+        let sessionId = generateSessionId();
+
+        // 生成会话ID
+        function generateSessionId() {
+            return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+            loadSelectedCharacters();
+        });
+
+        // 加载所有角色
+        async function loadCharacters() {
+            try {
+                const response = await fetch('/api/characters');
+                allCharacters = await response.json();
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                showNotification('加载角色失败', 'error');
+            }
+        }
+
+        // 从sessionStorage加载已选择的角色
+        function loadSelectedCharacters() {
+            const stored = sessionStorage.getItem('selectedCharacters');
+            if (stored) {
+                selectedCharacterIds = JSON.parse(stored);
+                updateSelectedCharactersDisplay();
+            }
+        }
+
+        // 显示角色选择器
+        async function showCharacterSelector() {
+            if (allCharacters.length === 0) {
+                await loadCharacters();
+            }
+            
+            const charactersList = document.getElementById('charactersList');
+            charactersList.innerHTML = '';
+            
+            allCharacters.forEach(character => {
+                const characterCard = createCharacterSelectorCard(character);
+                charactersList.appendChild(characterCard);
+            });
+            
+            document.getElementById('characterSelectorModal').classList.remove('hidden');
+            document.getElementById('characterSelectorModal').classList.add('flex');
+        }
+
+        // 生成头像HTML
+        function generateAvatarHtml(character, sizeClass = 'w-16 h-16') {
+            const avatarType = character.avatar_type || 'initial';
+            const avatarValue = character.avatar_value;
+            const textSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-sm' : sizeClass.includes('w-6') ? 'text-xs' : 'text-base';
+            const emojiSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-lg' : sizeClass.includes('w-6') ? 'text-sm' : 'text-2xl';
+            const marginClass = sizeClass.includes('w-6') ? 'mb-0' : 'mb-2';
+            
+            if (avatarType === 'emoji' && avatarValue) {
+                return `<div class="${sizeClass} bg-gray-100 rounded-full flex items-center justify-center mx-auto ${marginClass} ${emojiSize}">${avatarValue}</div>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                return `<div class="${sizeClass} rounded-full mx-auto ${marginClass} overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
+            } else {
+                // 默认使用首字母头像
+                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
+                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
+                const bgColor = colors[colorIndex];
+                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+            }
+        }
+
+        // 创建角色选择卡片
+        function createCharacterSelectorCard(character) {
+            const isSelected = selectedCharacterIds.includes(character.id);
+            const card = document.createElement('div');
+            card.className = `border-2 rounded-lg p-4 cursor-pointer transition ${
+                isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'
+            }`;
+            
+            // 生成头像HTML
+            const avatarHtml = generateAvatarHtml(character, 'w-12 h-12');
+            
+            card.innerHTML = `
+                <div class="text-center">
+                    ${avatarHtml}
+                    <h4 class="font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.name}">${character.name}</h4>
+                    <p class="text-sm text-indigo-600 mb-1 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.personality}">${character.personality}</p>
+                    <p class="text-xs text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.description}">${character.description}</p>
+                    ${isSelected ? '<div class="mt-2 text-indigo-600 text-sm">✓ 已选择</div>' : ''}
+                </div>
+            `;
+            
+            card.onclick = () => toggleCharacterSelection(character.id, card);
+            return card;
+        }
+
+        // 切换角色选择状态
+        function toggleCharacterSelection(characterId, cardElement) {
+            const isSelected = selectedCharacterIds.includes(characterId);
+            
+            if (isSelected) {
+                selectedCharacterIds = selectedCharacterIds.filter(id => id !== characterId);
+                cardElement.className = 'border-2 rounded-lg p-4 cursor-pointer transition border-gray-200 hover:border-indigo-300';
+                cardElement.querySelector('.mt-2')?.remove();
+            } else {
+                selectedCharacterIds.push(characterId);
+                cardElement.className = 'border-2 rounded-lg p-4 cursor-pointer transition border-indigo-500 bg-indigo-50';
+                const selectedDiv = document.createElement('div');
+                selectedDiv.className = 'mt-2 text-indigo-600 text-sm';
+                selectedDiv.textContent = '✓ 已选择';
+                cardElement.querySelector('.text-center').appendChild(selectedDiv);
+            }
+        }
+
+        // 确认角色选择
+        function confirmCharacterSelection() {
+            if (selectedCharacterIds.length === 0) {
+                showNotification('请至少选择一个角色', 'error');
+                return;
+            }
+            
+            sessionStorage.setItem('selectedCharacters', JSON.stringify(selectedCharacterIds));
+            updateSelectedCharactersDisplay();
+            hideCharacterSelector();
+        }
+
+        // 隐藏角色选择器
+        function hideCharacterSelector() {
+            document.getElementById('characterSelectorModal').classList.add('hidden');
+            document.getElementById('characterSelectorModal').classList.remove('flex');
+        }
+
+        // 更新已选择角色显示
+        function updateSelectedCharactersDisplay() {
+            const display = document.getElementById('selectedCharactersDisplay');
+            
+            if (selectedCharacterIds.length === 0) {
+                display.innerHTML = '<div class="text-gray-500 text-sm">请选择要参与聊天的角色</div>';
+                return;
+            }
+            
+            display.innerHTML = '';
+            selectedCharacterIds.forEach(id => {
+                const character = allCharacters.find(c => c.id === id);
+                if (character) {
+                    const characterChip = document.createElement('div');
+                    characterChip.className = 'flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm';
+                    
+                    // 生成小尺寸头像
+                    const avatarHtml = generateAvatarHtml(character, 'w-6 h-6').replace('mb-2', 'mb-0');
+                    
+                    characterChip.innerHTML = `
+                        ${avatarHtml}
+                        <span class="whitespace-nowrap overflow-hidden text-ellipsis" title="${character.name}">${character.name}</span>
+                    `;
+                    display.appendChild(characterChip);
+                }
+            });
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                showNotification('请输入消息内容', 'error');
+                return;
+            }
+            
+            if (selectedCharacterIds.length === 0) {
+                showNotification('请先选择参与聊天的角色', 'error');
+                return;
+            }
+            
+            if (isTyping) {
+                showNotification('请等待AI回复完成', 'error');
+                return;
+            }
+            
+            // 设置当前话题
+            if (!currentTopic) {
+                currentTopic = message;
+            }
+            
+            // 添加用户消息到聊天记录
+            addMessageToChat('用户', message, 'user');
+            input.value = '';
+            
+            // 显示AI正在输入状态
+            isTyping = true;
+            showTypingIndicators();
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        character_ids: selectedCharacterIds,
+                        message: message,
+                        topic: currentTopic,
+                        session_id: sessionId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // 移除输入指示器
+                removeTypingIndicators();
+                
+                if (result.responses) {
+                    // 逐个显示角色回复，增加真实感
+                    for (let i = 0; i < result.responses.length; i++) {
+                        const characterResponse = result.responses[i];
+                        
+                        // 添加延迟，模拟真实对话节奏
+                        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+                        
+                        addMessageToChat(
+                            characterResponse.character_name,
+                            characterResponse.message,
+                            'character',
+                            characterResponse.character_id
+                        );
+                    }
+                } else {
+                    showNotification('AI回复失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                removeTypingIndicators();
+                showNotification('发送失败，请重试', 'error');
+            } finally {
+                isTyping = false;
+            }
+        }
+
+        // 添加消息到聊天界面
+        function addMessageToChat(sender, message, type, characterId = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // 如果是第一条消息，清除欢迎消息
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'user') {
+                // 用户消息右对齐
+                messageDiv.className = 'flex items-start space-x-3 animate-fade-in justify-end mb-4';
+                messageDiv.innerHTML = `
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 rounded-lg max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl order-1">
+                        <div class="font-medium text-sm mb-1">${sender}</div>
+                        <div class="break-words">${message}</div>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold order-2">
+                        我
+                    </div>
+                `;
+            } else {
+                // AI角色消息左对齐
+                messageDiv.className = 'flex items-start space-x-3 animate-fade-in mb-4';
+                
+                // 查找角色信息以获取正确的头像
+                const character = allCharacters.find(c => c.id === characterId);
+                let avatarHtml;
+                if (character) {
+                    avatarHtml = generateAvatarHtml(character, 'w-8 h-8');
+                } else {
+                    // 如果找不到角色信息，创建临时角色对象使用默认头像
+                    const tempCharacter = { name: sender, avatar_type: 'initial', avatar_value: null };
+                    avatarHtml = generateAvatarHtml(tempCharacter, 'w-8 h-8');
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0">${avatarHtml}</div>
+                    <div class="bg-white p-3 rounded-lg shadow max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
+                        <div class="font-medium text-sm mb-1 text-indigo-600">${sender}</div>
+                        <div class="text-gray-800 break-words">${message}</div>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // 添加到聊天历史
+            chatHistory.push({ sender, message, type, timestamp: new Date() });
+        }
+
+        // 显示输入指示器
+        function showTypingIndicators() {
+            selectedCharacterIds.forEach((id, index) => {
+                const character = allCharacters.find(c => c.id === id);
+                if (character) {
+                    setTimeout(() => {
+                        addTypingIndicator(character.name, id);
+                    }, index * 500);
+                }
+            });
+        }
+
+        // 添加输入指示器
+        function addTypingIndicator(characterName, characterId) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // 查找角色信息以获取正确的头像
+            const character = allCharacters.find(c => c.id === characterId);
+            let avatarHtml;
+            if (character) {
+                avatarHtml = generateAvatarHtml(character, 'w-8 h-8');
+            } else {
+                // 如果找不到角色信息，创建临时角色对象使用默认头像
+                const tempCharacter = { name: characterName, avatar_type: 'initial', avatar_value: null };
+                avatarHtml = generateAvatarHtml(tempCharacter, 'w-8 h-8');
+            }
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'flex items-center space-x-3 typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="flex-shrink-0">${avatarHtml}</div>
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <div class="text-xs text-gray-500 mb-1">${characterName} 正在输入...</div>
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-typing"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-typing" style="animation-delay: 0.2s"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-typing" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 移除输入指示器
+        function removeTypingIndicators() {
+            const indicators = document.querySelectorAll('.typing-indicator');
+            indicators.forEach(indicator => indicator.remove());
+        }
+
+        // 清空聊天
+        function clearChat() {
+            if (confirm('确定要清空聊天记录吗？')) {
+                document.getElementById('chatMessages').innerHTML = '<div id="welcomeMessage" class="text-center text-gray-500 text-sm py-8"><div class="mb-4"><div class="text-lg mb-2">💬 欢迎来到AI人格群聊！</div><div class="text-gray-400 mb-4">选择角色后开始对话吧~</div></div><div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mx-4 mb-4"><div class="text-indigo-600 font-medium mb-2">💡 聊天小贴士</div><div class="text-xs text-gray-600 space-y-1"><div>• 不知道怎么决策问题？试试看问问你的角色们吧~</div><div>• 想听听不同观点？让角色们讨论一个话题</div><div>• 需要创意灵感？角色们会给你意想不到的想法</div><div>• 想要情感支持？角色们会陪伴你聊天解忧</div></div></div></div>';
+                chatHistory = [];
+                currentTopic = '';
+                sessionId = generateSessionId(); // 重新生成会话ID，开始新的对话上下文
+            }
+        }
+
+        // 导出聊天记录
+        function exportChat() {
+            if (chatHistory.length === 0) {
+                showNotification('没有聊天记录可导出', 'error');
+                return;
+            }
+            
+            let exportText = 'ChatPersona 聊天记录\n';
+            exportText += '导出时间: ' + new Date().toLocaleString() + '\n\n';
+            
+            chatHistory.forEach(msg => {
+                exportText += `[${msg.timestamp.toLocaleTimeString()}] ${msg.sender}: ${msg.message}\n`;
+            });
+            
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ChatPersona_聊天记录_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 键盘事件处理
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 工具函数
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
+</body>
+</html>

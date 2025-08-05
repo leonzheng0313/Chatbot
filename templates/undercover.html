@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persona Undercover - 谁是卧底</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'typing': 'typing 1.5s ease-in-out infinite',
+                        'bounce-gentle': 'bounce 1s ease-in-out 3'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        typing: {
+                            '0%, 60%, 100%': { opacity: '1' },
+                            '30%': { opacity: '0.4' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">🕵️</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">Persona Undercover</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="bg-gray-100 hover:bg-gray-200 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-center">
+                        ← 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- 游戏标题 -->
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">🎭 谁是卧底</h2>
+            <p class="text-gray-600 text-lg">AI人格推理游戏 - 发现隐藏在人群中的卧底</p>
+        </div>
+
+        <!-- 游戏设置区域 -->
+        <div id="gameSetup" class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">🎮 游戏设置</h3>
+            
+            <!-- 角色选择 -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-700 mb-3">选择参与角色 (3-6个)</h4>
+                <div id="characterList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 角色列表将通过JavaScript动态加载 -->
+                </div>
+                <div id="selectedCharacters" class="mt-4">
+                    <p class="text-sm text-gray-600">已选择角色: <span id="selectedCount">0</span>/6</p>
+                    <div id="selectedList" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+            </div>
+
+            <!-- 词语设置 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-lg font-semibold text-gray-700">📝 词语设置</h4>
+                    <a href="/words" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                        <span>📚</span>
+                        <span>词库管理</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 mb-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="wordMode" value="system" checked class="mr-2" onchange="toggleWordMode()">
+                        <span class="text-sm font-medium text-gray-700">使用系统词库</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="wordMode" value="custom" class="mr-2" onchange="toggleWordMode()">
+                        <span class="text-sm font-medium text-gray-700">自定义词语</span>
+                    </label>
+                </div>
+                
+                <!-- 自定义词语输入区域 -->
+                <div id="customWordArea" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">平民词</label>
+                            <input type="text" id="customPublicWord" placeholder="请输入平民词" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">卧底词</label>
+                            <input type="text" id="customUndercoverWord" placeholder="请输入卧底词" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">💡 提示：选择相似但有区别的词语，如"玻璃杯"和"水杯"</p>
+                </div>
+            </div>
+
+            <!-- 游戏设置 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div id="difficultySection">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">游戏难度</label>
+                    <select id="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="easy">简单</option>
+                        <option value="medium" selected>中等</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">最大回合数</label>
+                    <select id="maxRounds" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="2">2轮</option>
+                        <option value="3" selected>3轮</option>
+                        <option value="4">4轮</option>
+                        <option value="5">5轮</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 开始游戏按钮 -->
+            <div class="text-center">
+                <button id="startGameBtn" onclick="startGame()" class="bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    🚀 开始游戏
+                </button>
+            </div>
+        </div>
+
+        <!-- 游戏进行区域 -->
+        <div id="gameArea" class="hidden">
+            <!-- 游戏信息卡片 -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">🎯 游戏进行中</h3>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">当前回合: <span id="currentRound">1</span>/<span id="totalRounds">3</span></p>
+                        <p class="text-sm text-gray-600">剩余角色: <span id="remainingCount">0</span></p>
+                    </div>
+                </div>
+                
+                <!-- 词汇提示 (仅玩家可见) -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-gray-700 mb-2">📝 词汇信息 (仅你可见)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-green-100 rounded-lg p-3">
+                            <p class="text-sm text-gray-600">公共词</p>
+                            <p class="text-lg font-bold text-green-700" id="publicWord">-</p>
+                        </div>
+                        <div class="bg-red-100 rounded-lg p-3">
+                            <p class="text-sm text-gray-600">卧底词</p>
+                            <p class="text-lg font-bold text-red-700" id="undercoverWord">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要游戏内容区域 - 4:1布局 -->
+            <div class="flex gap-6 mb-6">
+                <!-- 左侧：角色发言和投票区域 (4/5) -->
+                <div class="flex-1" style="flex: 4;">
+                    <!-- 角色发言区域 -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4">💬 角色发言</h4>
+                        <div id="characterDescriptions" class="space-y-4">
+                            <!-- 角色发言将动态添加 -->
+                        </div>
+                        
+                        <!-- 生成描述按钮 -->
+                        <div class="text-center mt-6">
+                            <button id="generateDescBtn" onclick="generateAllDescriptions()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition hidden">
+                                🎭 生成所有角色描述
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 投票区域 -->
+                    <div id="votingArea" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4">🗳️ AI角色投票</h4>
+                        <div id="votingOptions">
+                            <!-- AI投票内容将动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：游戏历史记录 (1/5) -->
+                <div class="flex-1" style="flex: 1;">
+                    <div id="gameHistory" class="bg-white rounded-xl shadow-lg p-4 sticky top-4">
+                        <h4 class="text-lg font-bold text-gray-800 mb-3">📜 游戏历史</h4>
+                        <div id="historyContent" class="space-y-2 max-h-96 overflow-y-auto text-sm">
+                            <!-- 游戏历史将动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+            <p class="text-gray-700">正在生成AI描述...</p>
+        </div>
+    </div>
+
+    <!-- 游戏结果弹窗 -->
+    <div id="gameResultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <h4 class="text-3xl font-bold mb-6" id="resultTitle">🎉 游戏结束</h4>
+                <div id="resultContent" class="text-lg text-gray-700 mb-8">
+                    <!-- 结果内容将动态生成 -->
+                </div>
+                <div class="flex space-x-4 justify-center">
+                    <button onclick="closeGameResult()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+                        📊 查看详情
+                    </button>
+                    <button onclick="resetGame()" class="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                        🔄 重新开始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 生成头像HTML
+        function generateAvatarHtml(character, sizeClass = 'w-10 h-10') {
+            const avatarType = character.avatar_type || 'initial';
+            const avatarValue = character.avatar_value;
+            const textSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-sm' : 'text-base';
+            const emojiSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-lg' : 'text-2xl';
+            
+            if (avatarType === 'emoji' && avatarValue) {
+                return `<div class="${sizeClass} bg-gray-100 rounded-full flex items-center justify-center ${emojiSize}">${avatarValue}</div>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                return `<div class="${sizeClass} rounded-full overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
+            } else {
+                // 默认使用首字母头像
+                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
+                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
+                const bgColor = colors[colorIndex];
+                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+            }
+        }
+
+        let gameState = {
+            sessionId: null,
+            characters: [],
+            selectedCharacters: [],
+            currentRound: 1,
+            maxRounds: 3,
+            eliminated: [],
+            gameOver: false,
+            undercoverIndex: -1
+        };
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+        });
+
+        // 切换词语模式
+        function toggleWordMode() {
+            const wordMode = document.querySelector('input[name="wordMode"]:checked').value;
+            const customWordArea = document.getElementById('customWordArea');
+            const difficultySection = document.getElementById('difficultySection');
+            
+            if (wordMode === 'custom') {
+                customWordArea.classList.remove('hidden');
+                difficultySection.classList.add('opacity-50');
+                document.getElementById('difficulty').disabled = true;
+            } else {
+                customWordArea.classList.add('hidden');
+                difficultySection.classList.remove('opacity-50');
+                document.getElementById('difficulty').disabled = false;
+            }
+        }
+
+        // 加载角色列表
+        async function loadCharacters() {
+            try {
+                const response = await fetch('/api/characters');
+                const characters = await response.json();
+                gameState.characters = characters;
+                displayCharacters(characters);
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                alert('加载角色失败，请刷新页面重试');
+            }
+        }
+
+        // 显示角色列表
+        function displayCharacters(characters) {
+            const container = document.getElementById('characterList');
+            container.innerHTML = '';
+            
+            characters.forEach((character, index) => {
+                const characterCard = document.createElement('div');
+                characterCard.className = 'border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-red-300 hover:bg-red-50 transition';
+                characterCard.onclick = () => toggleCharacterSelection(character, characterCard);
+                
+                characterCard.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        ${generateAvatarHtml(character, 'w-12 h-12')}
+                        <div class="flex-1">
+                            <h5 class="font-semibold text-gray-800">${character.name}</h5>
+                            <p class="text-sm text-gray-600">${character.personality}</p>
+                        </div>
+                        <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                            <div class="w-3 h-3 bg-red-500 rounded-full hidden"></div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(characterCard);
+            });
+        }
+
+        // 切换角色选择
+        function toggleCharacterSelection(character, cardElement) {
+            const isSelected = gameState.selectedCharacters.some(c => c.id === character.id);
+            
+            if (isSelected) {
+                // 取消选择
+                gameState.selectedCharacters = gameState.selectedCharacters.filter(c => c.id !== character.id);
+                cardElement.classList.remove('border-red-500', 'bg-red-100');
+                cardElement.querySelector('.w-3').classList.add('hidden');
+            } else {
+                // 选择角色
+                if (gameState.selectedCharacters.length >= 6) {
+                    alert('最多只能选择6个角色');
+                    return;
+                }
+                gameState.selectedCharacters.push(character);
+                cardElement.classList.add('border-red-500', 'bg-red-100');
+                cardElement.querySelector('.w-3').classList.remove('hidden');
+            }
+            
+            updateSelectedDisplay();
+        }
+
+        // 更新已选择角色显示
+        function updateSelectedDisplay() {
+            const countElement = document.getElementById('selectedCount');
+            const listElement = document.getElementById('selectedList');
+            const startBtn = document.getElementById('startGameBtn');
+            
+            countElement.textContent = gameState.selectedCharacters.length;
+            
+            listElement.innerHTML = '';
+            gameState.selectedCharacters.forEach(character => {
+                const tag = document.createElement('span');
+                tag.className = 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm';
+                tag.textContent = character.name;
+                listElement.appendChild(tag);
+            });
+            
+            // 启用/禁用开始按钮
+            startBtn.disabled = gameState.selectedCharacters.length < 3;
+        }
+
+        // 开始游戏
+        async function startGame() {
+            if (gameState.selectedCharacters.length < 3) {
+                alert('至少需要选择3个角色');
+                return;
+            }
+            
+            const wordMode = document.querySelector('input[name="wordMode"]:checked').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const maxRounds = parseInt(document.getElementById('maxRounds').value);
+            
+            let gameData = {
+                characters: gameState.selectedCharacters,
+                max_rounds: maxRounds
+            };
+            
+            // 检查词语模式
+            if (wordMode === 'custom') {
+                const publicWord = document.getElementById('customPublicWord').value.trim();
+                const undercoverWord = document.getElementById('customUndercoverWord').value.trim();
+                
+                if (!publicWord || !undercoverWord) {
+                    alert('请输入平民词和卧底词');
+                    return;
+                }
+                
+                if (publicWord === undercoverWord) {
+                    alert('平民词和卧底词不能相同');
+                    return;
+                }
+                
+                gameData.custom_words = {
+                    public_word: publicWord,
+                    undercover_word: undercoverWord
+                };
+            } else {
+                gameData.difficulty = difficulty;
+            }
+            
+            try {
+                const response = await fetch('/api/game/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gameData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    gameState.sessionId = result.session_id;
+                    gameState.currentRound = result.current_round;
+                    gameState.maxRounds = result.max_rounds;
+                    gameState.undercoverIndex = result.undercover_index;
+                    
+                    // 添加游戏开始流式消息
+                    addGameFlowMessage('🎮 游戏开始！');
+                    addGameFlowMessage(`📝 本轮词语：平民词「${result.public_word}」，卧底词「${result.undercover_word}」`);
+                    addGameFlowMessage(`👥 ${gameState.selectedCharacters.length}个角色参与游戏，其中${gameState.selectedCharacters[result.undercover_index].name}是卧底`);
+                    
+                    // 显示游戏区域
+                    document.getElementById('gameSetup').classList.add('hidden');
+                    document.getElementById('gameArea').classList.remove('hidden');
+                    document.getElementById('gameHistory').classList.remove('hidden');
+                    
+                    // 更新游戏信息
+                    document.getElementById('currentRound').textContent = result.current_round;
+                    document.getElementById('totalRounds').textContent = result.max_rounds;
+                    document.getElementById('remainingCount').textContent = gameState.selectedCharacters.length;
+                    document.getElementById('publicWord').textContent = result.public_word;
+                    document.getElementById('undercoverWord').textContent = result.undercover_word;
+                    
+                    // 初始化角色描述区域
+                    initializeDescriptionArea();
+                    
+                    // 自动开始生成描述
+                    setTimeout(() => {
+                        generateAllDescriptions();
+                    }, 1000);
+                } else {
+                    alert(result.error || '开始游戏失败');
+                }
+            } catch (error) {
+                console.error('开始游戏失败:', error);
+                alert('开始游戏失败，请重试');
+            }
+        }
+
+        // 初始化描述区域
+        function initializeDescriptionArea() {
+            const container = document.getElementById('characterDescriptions');
+            container.innerHTML = '';
+            
+            gameState.selectedCharacters.forEach((character, index) => {
+                const descCard = document.createElement('div');
+                descCard.className = 'border border-gray-200 rounded-lg p-4';
+                descCard.id = `desc-${index}`;
+                
+                const isEliminated = gameState.eliminated.includes(index);
+                const eliminatedClass = isEliminated ? 'opacity-50 bg-gray-100' : '';
+                
+                descCard.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-3 ${eliminatedClass}">
+                        ${generateAvatarHtml(character, 'w-10 h-10')}
+                        <div class="flex-1">
+                            <h5 class="font-semibold text-gray-800">${character.name}</h5>
+                            <p class="text-sm text-gray-600">${character.personality}</p>
+                        </div>
+                        ${isEliminated ? '<span class="text-red-500 font-bold">已淘汰</span>' : ''}
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-gray-600" id="desc-text-${index}">等待生成描述...</p>
+                    </div>
+                `;
+                
+                container.appendChild(descCard);
+            });
+        }
+
+        // 生成所有角色描述
+        async function generateAllDescriptions() {
+            // 添加流式提示
+            addGameFlowMessage(`🎭 第 ${gameState.currentRound} 轮开始，角色们正在思考描述...`);
+            
+            document.getElementById('generateDescBtn').disabled = true;
+            
+            let successCount = 0;
+            let totalCount = gameState.selectedCharacters.filter((_, i) => !gameState.eliminated.includes(i)).length;
+            
+            for (let i = 0; i < gameState.selectedCharacters.length; i++) {
+                if (!gameState.eliminated.includes(i)) {
+                    const character = gameState.selectedCharacters[i];
+                    addGameFlowMessage(`💭 ${character.name} 正在思考...`);
+                    
+                    try {
+                        await generateCharacterDescription(i);
+                        addGameFlowMessage(`💬 ${character.name} 完成了描述`);
+                        successCount++;
+                    } catch (error) {
+                        console.error(`角色${i}生成失败:`, error);
+                        // 错误已在generateCharacterDescription中处理
+                    }
+                    
+                    // 添加延迟避免API调用过快，并让用户看到流程
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+            }
+            
+            if (successCount > 0) {
+                addGameFlowMessage(`📊 ${successCount}/${totalCount} 角色描述完成，准备开始AI投票...`);
+                
+                // 延迟显示投票区域，让用户有时间阅读描述
+                setTimeout(() => {
+                    showVotingArea();
+                }, 2000);
+            } else {
+                addGameFlowMessage(`❌ 所有角色描述生成失败，请检查网络连接或API配置`);
+                alert('所有角色描述生成失败，请重试');
+            }
+            
+            document.getElementById('generateDescBtn').disabled = false;
+        }
+
+        // 生成单个角色描述
+        async function generateCharacterDescription(characterIndex, retryCount = 0) {
+            const textElement = document.getElementById(`desc-text-${characterIndex}`);
+            const maxRetries = 2;
+            
+            // 显示生成中的动画
+            textElement.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span>正在生成描述${retryCount > 0 ? ` (重试${retryCount})` : ''}</span>
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-typing"></div>
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-typing" style="animation-delay: 0.2s"></div>
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-typing" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            textElement.className = 'text-blue-600';
+            
+            try {
+                const response = await fetch('/api/game/describe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.sessionId,
+                        character_index: characterIndex
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.description && result.description.trim()) {
+                    textElement.textContent = result.description;
+                    textElement.className = 'text-gray-800 animate-fade-in';
+                } else {
+                    throw new Error(result.error || '生成描述失败或内容为空');
+                }
+            } catch (error) {
+                console.error(`角色${characterIndex}描述生成失败:`, error);
+                
+                // 重试机制
+                if (retryCount < maxRetries) {
+                    addGameFlowMessage(`⚠️ ${gameState.selectedCharacters[characterIndex].name} 生成失败，正在重试...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return await generateCharacterDescription(characterIndex, retryCount + 1);
+                } else {
+                    textElement.textContent = '生成失败，已达到最大重试次数';
+                    textElement.className = 'text-red-500';
+                    addGameFlowMessage(`❌ ${gameState.selectedCharacters[characterIndex].name} 生成失败`);
+                    throw error;
+                }
+            }
+        }
+
+        // 显示投票区域
+        function showVotingArea() {
+            const votingArea = document.getElementById('votingArea');
+            const votingOptions = document.getElementById('votingOptions');
+            
+            votingOptions.innerHTML = `
+                <div class="text-center py-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">🗳️ AI角色投票环节</h3>
+                    <p class="text-gray-600 mb-6">AI角色们正在分析发言，准备进行投票...</p>
+                    <button onclick="startAIVoting()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                        开始AI投票
+                    </button>
+                </div>
+            `;
+            
+            votingArea.classList.remove('hidden');
+        }
+
+        // 开始AI投票
+        async function startAIVoting() {
+            const votingOptions = document.getElementById('votingOptions');
+            
+            // 添加流式消息
+            addGameFlowMessage('🗳️ 开始AI投票阶段...');
+            addGameFlowMessage('🤔 AI角色们正在分析所有发言...');
+            
+            // 显示投票进行中的界面
+            votingOptions.innerHTML = `
+                <div class="text-center py-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">🗳️ AI角色投票中...</h3>
+                    <div class="flex justify-center items-center space-x-2 mb-6">
+                        <div class="w-3 h-3 bg-red-400 rounded-full animate-bounce"></div>
+                        <div class="w-3 h-3 bg-red-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-3 h-3 bg-red-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    </div>
+                    <p class="text-gray-600">AI角色们正在分析发言并进行投票...</p>
+                </div>
+            `;
+            
+            try {
+                // 获取AI投票结果
+                const voteResponse = await fetch('/api/game/ai-vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.sessionId
+                    })
+                });
+                
+                const voteResult = await voteResponse.json();
+                
+                if (voteResponse.ok) {
+                    addGameFlowMessage('✅ AI投票完成，正在统计结果...');
+                    
+                    // 显示投票过程
+                    await showVotingProcess(voteResult.vote_results);
+                    
+                    addGameFlowMessage('📊 正在处理投票结果...');
+                    
+                    // 显示处理投票结果的等待动画
+                    votingOptions.innerHTML = `
+                        <div class="text-center py-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">📊 统计投票结果中...</h3>
+                            <div class="flex justify-center items-center space-x-2 mb-6">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+                                <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse" style="animation-delay: 0.3s"></div>
+                                <div class="w-4 h-4 bg-yellow-500 rounded-full animate-pulse" style="animation-delay: 0.6s"></div>
+                                <div class="w-4 h-4 bg-red-500 rounded-full animate-pulse" style="animation-delay: 0.9s"></div>
+                            </div>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <p class="animate-fade-in">🔍 分析投票数据...</p>
+                                <p class="animate-fade-in" style="animation-delay: 1s">⚖️ 计算得票数量...</p>
+                                <p class="animate-fade-in" style="animation-delay: 2s">🎭 生成角色反应...</p>
+                                <p class="animate-fade-in" style="animation-delay: 3s">📋 准备结果展示...</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 处理投票结果
+                    const processResponse = await fetch('/api/game/process-ai-votes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_id: gameState.sessionId,
+                            vote_results: voteResult.vote_results
+                        })
+                    });
+                    
+                    const processResult = await processResponse.json();
+                    
+                    if (processResponse.ok) {
+                        const eliminatedCharacter = gameState.selectedCharacters[processResult.eliminated_character.index];
+                        addGameFlowMessage(`🎯 投票结果：${eliminatedCharacter.name} 被淘汰`);
+                        
+                        // 显示投票结果
+                        await showVotingResult(processResult);
+                        
+                        // 更新游戏状态
+                        gameState.eliminated.push(processResult.eliminated_character.index);
+                        gameState.gameOver = processResult.game_over;
+                        gameState.currentRound = processResult.current_round;
+                        
+                        // 更新显示
+                        updateGameDisplay();
+                        
+                        if (processResult.game_over) {
+                            addGameFlowMessage(`🏆 游戏结束！${processResult.winner === 'undercover' ? '卧底' : '平民'}获胜`);
+                            setTimeout(() => {
+                                showGameResult(processResult.winner, gameState.undercoverIndex);
+                            }, 3000);
+                        } else {
+                            addGameFlowMessage(`➡️ 进入第 ${processResult.current_round} 轮`);
+                            // 继续下一轮
+                            setTimeout(() => {
+                                document.getElementById('currentRound').textContent = gameState.currentRound;
+                                // 保持投票区域显示，不隐藏
+                                initializeDescriptionArea();
+                            }, 3000);
+                        }
+                    } else {
+                        throw new Error(processResult.error || '投票处理失败');
+                    }
+                } else {
+                    throw new Error(voteResult.error || 'AI投票失败');
+                }
+            } catch (error) {
+                console.error('AI投票失败:', error);
+                addGameFlowMessage(`❌ 投票失败: ${error.message}`);
+                votingOptions.innerHTML = `
+                    <div class="text-center py-8">
+                        <h3 class="text-xl font-bold text-red-600 mb-4">❌ 投票失败</h3>
+                        <p class="text-gray-600 mb-6">${error.message}</p>
+                        <button onclick="startAIVoting()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                            重新投票
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // 显示投票过程
+        async function showVotingProcess(voteResults) {
+            const votingOptions = document.getElementById('votingOptions');
+            
+            votingOptions.innerHTML = `
+                <div class="py-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">🗳️ AI角色投票发言</h3>
+                    <div id="voteMessages" class="space-y-4 max-h-96 overflow-y-auto">
+                    </div>
+                </div>
+            `;
+            
+            const voteMessages = document.getElementById('voteMessages');
+            
+            for (let i = 0; i < voteResults.length; i++) {
+                const vote = voteResults[i];
+                const character = gameState.selectedCharacters[vote.character_index];
+                
+                // 添加投票消息
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start space-x-3 p-4 bg-gray-50 rounded-lg';
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0">
+                        ${generateAvatarHtml(character, 'w-10 h-10 text-sm')}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="font-semibold text-gray-800">${character.name}</span>
+                            ${vote.is_undercover ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">卧底</span>' : '<span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">平民</span>'}
+                        </div>
+                        <div class="text-gray-700 typing-animation" id="vote-text-${i}"></div>
+                    </div>
+                `;
+                
+                voteMessages.appendChild(messageDiv);
+                
+                // 打字机效果显示投票内容
+                await typeText(`vote-text-${i}`, vote.vote_response, 30);
+                
+                // 等待一下再显示下一个
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        
+        // 显示投票结果
+        async function showVotingResult(result) {
+            const votingOptions = document.getElementById('votingOptions');
+            
+            // 构建投票统计详情
+            let voteDetailsHtml = '';
+            if (result.vote_details && result.vote_details.length > 0) {
+                voteDetailsHtml = `
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h5 class="font-bold text-gray-700 mb-3">投票详情：</h5>
+                        <div class="space-y-2 text-sm">
+                            ${result.vote_details.map(vote => 
+                                `<div class="flex justify-between items-center">
+                                    <span>${vote.voter} → ${vote.voted_for}</span>
+                                    <span class="text-gray-500">${vote.reason.split('理由：')[1] || vote.reason}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            votingOptions.innerHTML = `
+                <div class="py-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">📊 投票结果统计</h3>
+                    ${voteDetailsHtml}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                        <div class="text-center">
+                            <h4 class="text-lg font-bold text-red-600 mb-2">被淘汰角色</h4>
+                            <div class="flex justify-center items-center space-x-3 mb-4">
+                                ${generateAvatarHtml(gameState.selectedCharacters[result.eliminated_character.index], 'w-16 h-16 text-xl')}
+                                <div>
+                                    <p class="font-bold text-xl">${result.eliminated_character.name}</p>
+                                    <p class="text-gray-600">${result.eliminated_character.is_undercover ? '卧底身份' : '平民身份'}</p>
+                                </div>
+                            </div>
+                            ${result.eliminated_character.elimination_speech ? `
+                            <div class="bg-white border-l-4 ${result.eliminated_character.is_undercover ? 'border-red-500' : 'border-blue-500'} rounded-lg p-4 mt-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="text-2xl">${result.eliminated_character.is_undercover ? '😤' : '😡'}</div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-500 mb-1">${result.eliminated_character.name}的最后话语：</p>
+                                        <p class="text-gray-800 font-medium italic">"${result.eliminated_character.elimination_speech}"</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        ${result.game_over ? 
+                            `<div class="text-lg font-bold ${result.winner === 'undercover' ? 'text-red-600' : 'text-green-600'}">
+                                ${result.winner === 'undercover' ? '🎭 卧底获胜！' : '🕵️ 平民获胜！'}
+                            </div>` : 
+                            `<div class="text-gray-600 mb-4">游戏继续，进入第 ${result.current_round} 轮</div>
+                            <button onclick="generateAllDescriptions()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition">
+                                🎭 开始第 ${result.current_round} 轮发言
+                            </button>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 打字机效果函数
+        async function typeText(elementId, text, speed = 50) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                element.textContent += text[i];
+                await new Promise(resolve => setTimeout(resolve, speed));
+            }
+        }
+
+        // 更新游戏显示
+        function updateGameDisplay() {
+            const remainingCount = gameState.selectedCharacters.length - gameState.eliminated.length;
+            document.getElementById('remainingCount').textContent = remainingCount;
+            
+            // 更新角色显示状态
+            gameState.eliminated.forEach(index => {
+                const descCard = document.getElementById(`desc-${index}`);
+                if (descCard) {
+                    descCard.classList.add('opacity-50', 'bg-gray-100');
+                    const nameArea = descCard.querySelector('.flex');
+                    if (!nameArea.querySelector('.text-red-500')) {
+                        const eliminatedTag = document.createElement('span');
+                        eliminatedTag.className = 'text-red-500 font-bold';
+                        eliminatedTag.textContent = '已淘汰';
+                        nameArea.appendChild(eliminatedTag);
+                    }
+                }
+            });
+        }
+
+        // 显示游戏结果
+        function showGameResult(winner, undercoverIndex) {
+            const resultModal = document.getElementById('gameResultModal');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultContent = document.getElementById('resultContent');
+            
+            const undercoverCharacter = gameState.selectedCharacters[undercoverIndex];
+            
+            // 添加到游戏历史
+            addToGameHistory(winner, undercoverCharacter, gameState.currentRound);
+            
+            if (winner === 'undercover') {
+                resultTitle.innerHTML = '🎭 卧底胜利！';
+                resultTitle.className = 'text-3xl font-bold mb-6 text-red-600';
+                resultContent.innerHTML = `
+                    <p class="mb-4">恭喜卧底 <strong class="text-red-600">${undercoverCharacter.name}</strong> 成功隐藏身份！</p>
+                    <p class="text-gray-600">卧底成功存活到最后，获得胜利！</p>
+                `;
+            } else {
+                resultTitle.innerHTML = '🕵️ 平民胜利！';
+                resultTitle.className = 'text-3xl font-bold mb-6 text-green-600';
+                resultContent.innerHTML = `
+                    <p class="mb-4">成功识破卧底 <strong class="text-red-600">${undercoverCharacter.name}</strong>！</p>
+                    <p class="text-gray-600">平民们团结一致，成功找出了隐藏的卧底！</p>
+                `;
+            }
+            
+            // 显示弹窗而不是隐藏投票区域
+            resultModal.classList.remove('hidden');
+        }
+        
+        // 关闭游戏结果弹窗
+        function closeGameResult() {
+            document.getElementById('gameResultModal').classList.add('hidden');
+            // 显示游戏历史
+            document.getElementById('gameHistory').classList.remove('hidden');
+        }
+        
+        // 添加到游戏历史
+        function addToGameHistory(winner, undercoverCharacter, rounds) {
+            const historyContent = document.getElementById('historyContent');
+            const timestamp = new Date().toLocaleString();
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'bg-gray-50 rounded-lg p-4 border-l-4 ' + (winner === 'undercover' ? 'border-red-500' : 'border-green-500');
+            historyItem.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold ${winner === 'undercover' ? 'text-red-600' : 'text-green-600'}">
+                        ${winner === 'undercover' ? '🎭 卧底胜利' : '🕵️ 平民胜利'}
+                    </span>
+                    <span class="text-xs text-gray-500">${timestamp}</span>
+                </div>
+                <p class="text-sm text-gray-700">卧底: ${undercoverCharacter.name} | 轮数: ${rounds}</p>
+            `;
+            
+            historyContent.insertBefore(historyItem, historyContent.firstChild);
+        }
+        
+        // 添加游戏流程消息
+        function addGameFlowMessage(message) {
+            // 确保游戏历史区域可见
+            const gameHistory = document.getElementById('gameHistory');
+            if (gameHistory.classList.contains('hidden')) {
+                gameHistory.classList.remove('hidden');
+            }
+            
+            const historyContent = document.getElementById('historyContent');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const flowItem = document.createElement('div');
+            flowItem.className = 'bg-blue-50 rounded-lg p-3 border-l-4 border-blue-400 animate-fade-in';
+            flowItem.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-blue-800 font-medium">${message}</span>
+                    <span class="text-xs text-blue-500">${timestamp}</span>
+                </div>
+            `;
+            
+            historyContent.insertBefore(flowItem, historyContent.firstChild);
+            
+            // 自动滚动到最新消息
+            historyContent.scrollTop = 0;
+        }
+
+        // 重置游戏
+        function resetGame() {
+            gameState = {
+                sessionId: null,
+                characters: gameState.characters,
+                selectedCharacters: [],
+                currentRound: 1,
+                maxRounds: 3,
+                eliminated: [],
+                gameOver: false,
+                undercoverIndex: -1
+            };
+            
+            // 重置UI
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('gameSetup').classList.remove('hidden');
+            document.getElementById('gameResultModal').classList.add('hidden');
+            document.getElementById('gameHistory').classList.add('hidden');
+            document.getElementById('votingArea').classList.add('hidden');
+            document.getElementById('generateDescBtn').classList.add('hidden');
+            
+            // 清空游戏历史内容
+            document.getElementById('historyContent').innerHTML = '';
+            
+            // 重新加载角色列表
+            displayCharacters(gameState.characters);
+            updateSelectedDisplay();
+        }
+    </script>
+</body>
+</html>

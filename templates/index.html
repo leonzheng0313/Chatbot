@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPersona - 我的AI人格</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">CP</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">ChatPersona</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="showApiKeyModal()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🔑 API设置
+                    </button>
+                    <a href="/undercover" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🎭 谁是卧底
+                    </a>
+                    <a href="/sanctuary" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🏠 心灵小屋
+                    </a>
+                    <a href="/chat" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        💬 开始聊天
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">我的AI人格</h2>
+            <p class="text-gray-600 text-lg">创建独特的AI角色，开启多元化对话体验</p>
+        </div>
+
+        <!-- 功能介绍区域 - 并排布局 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- 游戏功能介绍 -->
+            <div class="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-6 border border-red-200">
+                <div class="flex flex-col h-full">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">🎭 Persona Undercover</h3>
+                        <p class="text-gray-600 mb-4 text-sm">体验AI人格推理游戏！让你的AI角色参与"谁是卧底"，通过不同的人格风格和语言特点进行推理与识别。</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">🧠 智能推理</span>
+                            <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">🎨 人格风格</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">🕵️ 身份隐藏</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">🎯 多轮对话</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="/undercover" class="inline-flex items-center space-x-2 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-semibold transition transform hover:scale-105 shadow-lg text-sm">
+                            <span class="text-lg">🎮</span>
+                            <span>立即体验</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ChatSanctuary功能介绍 -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+                <div class="flex flex-col h-full">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">🌸 ChatSanctuary：心灵小屋</h3>
+                        <p class="text-gray-600 mb-4 text-sm">AI陪伴式情绪疗愈平台。分享你的心声，让AI朋友们陪伴你探索内心，最终为你创作专属的治愈画作。</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">💝 情绪陪伴</span>
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">🎨 图像疗愈</span>
+                            <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded-full text-xs">🤗 共情对话</span>
+                            <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs">🖼️ 心情图册</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="/sanctuary" class="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition transform hover:scale-105 shadow-lg text-sm">
+                            <span class="text-lg">🏠</span>
+                            <span>进入小屋</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 角色网格 -->
+        <div id="charactersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- 角色卡片将通过JavaScript动态加载 -->
+        </div>
+
+        <!-- 创建新角色按钮 -->
+        <div class="mt-8 text-center">
+            <a href="/create" class="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl text-lg font-medium transition transform hover:scale-105 shadow-lg">
+                <span class="text-2xl">✨</span>
+                <span>创建新角色</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- API Key 设置模态框 -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">API Key 设置</h3>
+            <p class="text-gray-600 text-sm mb-4">你可以输入自己的百炼 Key，或使用默认通用 Key 体验功能。</p>
+            <input type="password" id="apiKeyInput" placeholder="输入你的阿里云百炼API Key" class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <div class="flex space-x-3">
+                <button onclick="hideApiKeyModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
+                    取消
+                </button>
+                <button onclick="saveApiKey()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑角色模态框 -->
+    <div id="editCharacterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">编辑角色</h3>
+            <form id="editCharacterForm">
+                <input type="hidden" id="editCharacterId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">角色名称</label>
+                    <input type="text" id="editCharacterName" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">头像设置</label>
+                    <div class="flex items-center space-x-4 mb-3">
+                        <div id="editAvatarPreview" class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
+                        <div class="flex space-x-2">
+                            <button type="button" onclick="showEmojiSelector()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm transition">
+                                😀 选择表情
+                            </button>
+                            <button type="button" onclick="document.getElementById('editAvatarUpload').click()" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-sm transition">
+                                📁 上传图片
+                            </button>
+                            <button type="button" onclick="resetToInitial()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition">
+                                🔄 重置
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="editAvatarUpload" accept="image/*" style="display: none" onchange="handleAvatarUpload(event)">
+                    <input type="hidden" id="editAvatarType" value="initial">
+                    <input type="hidden" id="editAvatarValue">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">角色描述</label>
+                    <textarea id="editCharacterDescription" rows="3" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">性格特点</label>
+                    <input type="text" id="editCharacterPersonality" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">系统提示词</label>
+                    <textarea id="editCharacterPrompt" rows="8" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入角色的系统提示词..." required></textarea>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" onclick="hideEditModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
+                        取消
+                    </button>
+                    <button type="button" onclick="deleteCharacter()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                        删除角色
+                    </button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
+                        保存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Emoji选择器模态框 -->
+    <div id="emojiModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">选择表情头像</h3>
+            <div class="grid grid-cols-6 gap-2 mb-4" id="emojiGrid">
+                <!-- Emoji选项将通过JavaScript生成 -->
+            </div>
+            <button onclick="hideEmojiSelector()" class="w-full bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
+                取消
+            </button>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-40">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">加载中...</p>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+            
+            // 监听角色名称输入，实时更新头像预览
+            const nameInput = document.getElementById('editCharacterName');
+            if (nameInput) {
+                nameInput.addEventListener('input', updateAvatarPreview);
+            }
+        });
+
+        // 加载角色列表
+        async function loadCharacters() {
+            try {
+                const response = await fetch('/api/characters');
+                const characters = await response.json();
+                displayCharacters(characters);
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                showNotification('加载角色失败，请刷新页面重试', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示角色列表
+        function displayCharacters(characters) {
+            const grid = document.getElementById('charactersGrid');
+            grid.innerHTML = '';
+
+            characters.forEach(character => {
+                const characterCard = createCharacterCard(character);
+                grid.appendChild(characterCard);
+            });
+        }
+
+        // 创建角色卡片
+        function createCharacterCard(character) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-lg p-6 hover:shadow-xl hover:ring-2 hover:ring-indigo-400 transition transform hover:scale-105 cursor-pointer';
+            
+            // 生成头像HTML
+            const avatarHtml = generateAvatarHtml(character);
+            
+            card.innerHTML = `
+                <div class="text-center">
+                    ${avatarHtml}
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${character.name}</h3>
+                    <p class="text-indigo-600 text-sm font-medium mb-2">${character.personality}</p>
+                    <p class="text-gray-600 text-sm mb-4">${character.description}</p>
+                    <div class="flex space-x-2 mb-2">
+                        <button onclick="selectCharacterForChat(${character.id})" class="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-sm font-medium transition">
+                            选择聊天
+                        </button>
+                        <button onclick="previewCharacter(${character.id})" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition">
+                            预览
+                        </button>
+                    </div>
+                    <button onclick="editCharacter(${character.id})" class="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-2 rounded-lg text-sm font-medium transition">
+                        ✏️ 编辑角色
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // 选择角色进行聊天
+        function selectCharacterForChat(characterId) {
+            // 将角色ID存储到sessionStorage，然后跳转到聊天页面
+            let selectedCharacters = JSON.parse(sessionStorage.getItem('selectedCharacters') || '[]');
+            if (!selectedCharacters.includes(characterId)) {
+                selectedCharacters.push(characterId);
+                sessionStorage.setItem('selectedCharacters', JSON.stringify(selectedCharacters));
+            }
+            window.location.href = '/chat';
+        }
+
+        // 预览角色
+        async function previewCharacter(characterId) {
+            try {
+                showLoading();
+                const response = await fetch('/api/characters');
+                const characters = await response.json();
+                const character = characters.find(c => c.id === characterId);
+                
+                if (character) {
+                    const previewResponse = await fetch('/api/generate-preview', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            system_prompt: character.system_prompt
+                        })
+                    });
+                    
+                    const result = await previewResponse.json();
+                    if (result.preview) {
+                        showPreviewModal(character.name, result.preview);
+                    } else {
+                        showNotification('预览生成失败', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('预览失败:', error);
+                showNotification('预览失败，请重试', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示预览模态框
+        function showPreviewModal(characterName, preview) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
+                    <h3 class="text-xl font-bold mb-4">${characterName} 的预览</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p class="text-gray-800">${preview}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
+                        关闭
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // API Key 相关函数
+        function showApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.remove('hidden');
+            document.getElementById('apiKeyModal').classList.add('flex');
+        }
+
+        function hideApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.add('hidden');
+            document.getElementById('apiKeyModal').classList.remove('flex');
+        }
+
+        async function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                showNotification('请输入API Key', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/set-api-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showNotification('API Key 设置成功', 'success');
+                    hideApiKeyModal();
+                    document.getElementById('apiKeyInput').value = '';
+                } else {
+                    showNotification(result.error || 'API Key 设置失败', 'error');
+                }
+            } catch (error) {
+                console.error('设置API Key失败:', error);
+                showNotification('设置失败，请重试', 'error');
+            }
+        }
+
+        // 生成头像HTML
+        function generateAvatarHtml(character, sizeClass = 'w-16 h-16') {
+            const avatarType = character.avatar_type || 'initial';
+            const avatarValue = character.avatar_value;
+            const textSize = sizeClass.includes('w-12') ? 'text-xl' : 'text-2xl';
+            const emojiSize = sizeClass.includes('w-12') ? 'text-xl' : 'text-3xl';
+            
+            if (avatarType === 'emoji' && avatarValue) {
+                return `<div class="${sizeClass} bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 ${emojiSize}">${avatarValue}</div>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                return `<div class="${sizeClass} rounded-full mx-auto mb-4 overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
+            } else {
+                // 默认使用首字母头像
+                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
+                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
+                const bgColor = colors[colorIndex];
+                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto mb-4 text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+            }
+        }
+
+        // 头像相关函数
+        const commonEmojis = [
+            '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+            '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+            '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+            '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+            '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+            '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+            '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯',
+            '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐',
+            '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈',
+            '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾',
+            '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿',
+            '😾', '👶', '👧', '🧒', '👦', '👩', '🧑', '👨', '👵', '🧓',
+            '👴', '👲', '👳', '👮', '👷', '💂', '🕵️', '👩‍⚕️', '👨‍⚕️', '👩‍🌾'
+        ];
+        
+        function showEmojiSelector() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            emojiGrid.innerHTML = '';
+            
+            commonEmojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.className = 'w-10 h-10 text-2xl hover:bg-gray-100 rounded transition';
+                button.textContent = emoji;
+                button.onclick = () => selectEmoji(emoji);
+                emojiGrid.appendChild(button);
+            });
+            
+            document.getElementById('emojiModal').classList.remove('hidden');
+            document.getElementById('emojiModal').classList.add('flex');
+        }
+        
+        function hideEmojiSelector() {
+            document.getElementById('emojiModal').classList.add('hidden');
+            document.getElementById('emojiModal').classList.remove('flex');
+        }
+        
+        function selectEmoji(emoji) {
+            document.getElementById('editAvatarType').value = 'emoji';
+            document.getElementById('editAvatarValue').value = emoji;
+            updateAvatarPreview();
+            hideEmojiSelector();
+        }
+        
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB限制
+                    showNotification('图片大小不能超过5MB', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editAvatarType').value = 'upload';
+                    document.getElementById('editAvatarValue').value = e.target.result;
+                    updateAvatarPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function resetToInitial() {
+            document.getElementById('editAvatarType').value = 'initial';
+            document.getElementById('editAvatarValue').value = '';
+            updateAvatarPreview();
+        }
+        
+        function updateAvatarPreview() {
+            const avatarType = document.getElementById('editAvatarType').value;
+            const avatarValue = document.getElementById('editAvatarValue').value;
+            const preview = document.getElementById('editAvatarPreview');
+            const characterName = document.getElementById('editCharacterName').value || 'A';
+            
+            // 创建临时角色对象
+            const tempCharacter = {
+                name: characterName,
+                avatar_type: avatarType,
+                avatar_value: avatarValue
+            };
+            
+            // 使用统一的头像生成函数
+            const avatarHtml = generateAvatarHtml(tempCharacter, 'w-12 h-12').replace('mx-auto mb-4', '');
+            preview.outerHTML = `<div id="editAvatarPreview">${avatarHtml}</div>`;
+        }
+
+        // 编辑角色相关函数
+        async function editCharacter(characterId) {
+            try {
+                const response = await fetch(`/api/characters/${characterId}`);
+                const character = await response.json();
+                
+                if (response.ok) {
+                    console.log('获取到的角色数据:', character);
+                    // 填充编辑表单
+                    document.getElementById('editCharacterId').value = character.id;
+                    document.getElementById('editCharacterName').value = character.name || '';
+                    document.getElementById('editCharacterDescription').value = character.description || '';
+                    document.getElementById('editCharacterPersonality').value = character.personality || '';
+                    document.getElementById('editCharacterPrompt').value = character.system_prompt || '';
+                    
+                    // 设置头像信息
+                    document.getElementById('editAvatarType').value = character.avatar_type || 'initial';
+                    document.getElementById('editAvatarValue').value = character.avatar_value || '';
+                    updateAvatarPreview();
+                    
+                    // 显示编辑模态框
+                    document.getElementById('editCharacterModal').classList.remove('hidden');
+                    document.getElementById('editCharacterModal').classList.add('flex');
+                } else {
+                    showNotification('获取角色信息失败', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching character:', error);
+                showNotification('获取角色信息失败', 'error');
+            }
+        }
+
+        function hideEditModal() {
+            document.getElementById('editCharacterModal').classList.add('hidden');
+            document.getElementById('editCharacterModal').classList.remove('flex');
+        }
+
+        // 处理编辑表单提交
+        document.getElementById('editCharacterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const characterId = document.getElementById('editCharacterId').value;
+            const formData = {
+                name: document.getElementById('editCharacterName').value.trim(),
+                description: document.getElementById('editCharacterDescription').value.trim(),
+                personality: document.getElementById('editCharacterPersonality').value.trim(),
+                system_prompt: document.getElementById('editCharacterPrompt').value.trim(),
+                avatar_type: document.getElementById('editAvatarType').value,
+                avatar_value: document.getElementById('editAvatarValue').value
+            };
+            
+            if (!formData.name || !formData.description || !formData.personality || !formData.system_prompt) {
+                showNotification('请填写所有字段', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/characters/${characterId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    showNotification('角色更新成功', 'success');
+                    hideEditModal();
+                    loadCharacters(); // 重新加载角色列表
+                } else {
+                    showNotification(result.error || '更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating character:', error);
+                showNotification('更新失败', 'error');
+            }
+        });
+
+        async function deleteCharacter() {
+            const characterId = document.getElementById('editCharacterId').value;
+            console.log('删除角色ID:', characterId);
+            
+            if (!characterId) {
+                showNotification('未找到角色ID', 'error');
+                return;
+            }
+            
+            if (!confirm('确定要删除这个角色吗？此操作不可撤销。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/characters/${characterId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    showNotification('角色删除成功', 'success');
+                    hideEditModal();
+                    loadCharacters(); // 重新加载角色列表
+                } else {
+                    showNotification(result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting character:', error);
+                showNotification('删除失败', 'error');
+            }
+        }
+
+        // 工具函数
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 动画显示
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

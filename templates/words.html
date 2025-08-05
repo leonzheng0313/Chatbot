@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词库管理 - Persona Undercover</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">📚</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">词库管理</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/undercover" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🎭 返回谁是卧底
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- 功能按钮区域 -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-4">
+                <button onclick="showAddWordForm()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition flex items-center space-x-2">
+                    <span>➕</span>
+                    <span>添加词汇对</span>
+                </button>
+                <button onclick="showBatchAddForm()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition flex items-center space-x-2">
+                    <span>📝</span>
+                    <span>批量添加</span>
+                </button>
+                <button onclick="showGenerateForm()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition flex items-center space-x-2">
+                    <span>🤖</span>
+                    <span>AI生成</span>
+                </button>
+                <button onclick="loadWords()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition flex items-center space-x-2">
+                    <span>🔄</span>
+                    <span>刷新</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 添加单个词汇对表单 -->
+        <div id="addWordForm" class="hidden mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">添加新词汇对</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">平民词</label>
+                        <input type="text" id="publicWord" placeholder="请输入平民词" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">卧底词</label>
+                        <input type="text" id="undercoverWord" placeholder="请输入卧底词" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">难度</label>
+                        <select id="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="easy">简单</option>
+                            <option value="medium" selected>中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-4">
+                    <button onclick="addWord()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition">添加</button>
+                    <button onclick="hideAddWordForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量添加表单 -->
+        <div id="batchAddForm" class="hidden mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">批量添加词汇对</h3>
+                <p class="text-gray-600 mb-4">请按照以下格式输入，每行一对词汇：平民词,卧底词,难度（easy/medium/hard）</p>
+                <textarea id="batchWords" rows="10" placeholder="例如：\n苹果,橙子,easy\n火锅,汤锅,medium\n铅笔,毛笔,hard" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+                <div class="flex space-x-4 mt-4">
+                    <button onclick="batchAddWords()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition">批量添加</button>
+                    <button onclick="hideBatchAddForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI生成表单 -->
+        <div id="generateForm" class="hidden mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">AI生成词汇对</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">主题</label>
+                        <input type="text" id="generateTheme" value="日常物品" placeholder="请输入主题" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">难度</label>
+                        <select id="generateDifficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="easy">简单</option>
+                            <option value="medium" selected>中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">数量</label>
+                        <input type="number" id="generateCount" value="5" min="1" max="20" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-4">
+                    <button onclick="generateWords()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition">生成</button>
+                    <button onclick="hideGenerateForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition">取消</button>
+                </div>
+                <div id="generateResult" class="hidden mt-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">生成结果</h4>
+                    <div id="generatedWords" class="space-y-2"></div>
+                    <button onclick="saveGeneratedWords()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition mt-4">保存到词库</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 词库列表 -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800">词库列表</h2>
+                <p class="text-gray-600 mt-2">当前词库中的所有词汇对</p>
+            </div>
+            
+            <!-- 筛选器 -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">难度筛选</label>
+                        <select id="difficultyFilter" onchange="filterWords()" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="all">全部</option>
+                            <option value="easy">简单</option>
+                            <option value="medium">中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+                        <input type="text" id="searchInput" onkeyup="filterWords()" placeholder="搜索词汇..." class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <div id="wordsContainer" class="p-6">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p class="text-gray-600 mt-4">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示 -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script>
+        let allWords = [];
+        let generatedWordPairs = [];
+
+        // 页面加载时获取词库
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWords();
+        });
+
+        // 加载词库
+        async function loadWords() {
+            try {
+                const response = await fetch('/api/game/words');
+                const words = await response.json();
+                allWords = words;
+                displayWords(words);
+            } catch (error) {
+                showMessage('加载词库失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示词库
+        function displayWords(words) {
+            const container = document.getElementById('wordsContainer');
+            
+            if (words.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-600">暂无词汇对</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const wordsHtml = words.map(word => {
+                const difficultyColor = {
+                    'easy': 'bg-green-100 text-green-800',
+                    'medium': 'bg-yellow-100 text-yellow-800',
+                    'hard': 'bg-red-100 text-red-800'
+                }[word.difficulty];
+
+                const difficultyText = {
+                    'easy': '简单',
+                    'medium': '中等',
+                    'hard': '困难'
+                }[word.difficulty];
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="grid grid-cols-2 gap-4 mb-2">
+                                    <div>
+                                        <span class="text-sm text-gray-600">平民词:</span>
+                                        <p class="font-medium text-gray-800">${word.public_word}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">卧底词:</span>
+                                        <p class="font-medium text-gray-800">${word.undercover_word}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 text-xs rounded-full ${difficultyColor}">${difficultyText}</span>
+                                    <span class="text-xs text-gray-500">${new Date(word.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <button onclick="deleteWord(${word.id})" class="text-red-500 hover:text-red-700 transition ml-4">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${wordsHtml}
+                </div>
+            `;
+        }
+
+        // 筛选词汇
+        function filterWords() {
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filteredWords = allWords;
+            
+            if (difficultyFilter !== 'all') {
+                filteredWords = filteredWords.filter(word => word.difficulty === difficultyFilter);
+            }
+            
+            if (searchInput) {
+                filteredWords = filteredWords.filter(word => 
+                    word.public_word.toLowerCase().includes(searchInput) ||
+                    word.undercover_word.toLowerCase().includes(searchInput)
+                );
+            }
+            
+            displayWords(filteredWords);
+        }
+
+        // 显示添加表单
+        function showAddWordForm() {
+            document.getElementById('addWordForm').classList.remove('hidden');
+            hideOtherForms('addWordForm');
+        }
+
+        function hideAddWordForm() {
+            document.getElementById('addWordForm').classList.add('hidden');
+        }
+
+        // 显示批量添加表单
+        function showBatchAddForm() {
+            document.getElementById('batchAddForm').classList.remove('hidden');
+            hideOtherForms('batchAddForm');
+        }
+
+        function hideBatchAddForm() {
+            document.getElementById('batchAddForm').classList.add('hidden');
+        }
+
+        // 显示生成表单
+        function showGenerateForm() {
+            document.getElementById('generateForm').classList.remove('hidden');
+            hideOtherForms('generateForm');
+        }
+
+        function hideGenerateForm() {
+            document.getElementById('generateForm').classList.add('hidden');
+        }
+
+        // 隐藏其他表单
+        function hideOtherForms(except) {
+            const forms = ['addWordForm', 'batchAddForm', 'generateForm'];
+            forms.forEach(form => {
+                if (form !== except) {
+                    document.getElementById(form).classList.add('hidden');
+                }
+            });
+        }
+
+        // 添加单个词汇对
+        async function addWord() {
+            const publicWord = document.getElementById('publicWord').value.trim();
+            const undercoverWord = document.getElementById('undercoverWord').value.trim();
+            const difficulty = document.getElementById('difficulty').value;
+
+            if (!publicWord || !undercoverWord) {
+                showMessage('请填写完整的词汇对', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/game/words', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        public_word: publicWord,
+                        undercover_word: undercoverWord,
+                        difficulty: difficulty
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('词汇对添加成功', 'success');
+                    document.getElementById('publicWord').value = '';
+                    document.getElementById('undercoverWord').value = '';
+                    hideAddWordForm();
+                    loadWords();
+                } else {
+                    showMessage(result.error || '添加失败', 'error');
+                }
+            } catch (error) {
+                showMessage('添加失败: ' + error.message, 'error');
+            }
+        }
+
+        // 批量添加词汇对
+        async function batchAddWords() {
+            const batchText = document.getElementById('batchWords').value.trim();
+            
+            if (!batchText) {
+                showMessage('请输入词汇对数据', 'error');
+                return;
+            }
+
+            const lines = batchText.split('\n').filter(line => line.trim());
+            const wordPairs = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const parts = lines[i].split(',').map(part => part.trim());
+                if (parts.length >= 2) {
+                    wordPairs.push({
+                        public_word: parts[0],
+                        undercover_word: parts[1],
+                        difficulty: parts[2] || 'medium'
+                    });
+                }
+            }
+
+            if (wordPairs.length === 0) {
+                showMessage('没有有效的词汇对数据', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/game/words/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        word_pairs: wordPairs
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(`批量添加完成：成功${result.added_count}个，跳过${result.skipped_count}个`, 'success');
+                    if (result.errors.length > 0) {
+                        console.log('错误详情:', result.errors);
+                    }
+                    document.getElementById('batchWords').value = '';
+                    hideBatchAddForm();
+                    loadWords();
+                } else {
+                    showMessage(result.error || '批量添加失败', 'error');
+                }
+            } catch (error) {
+                showMessage('批量添加失败: ' + error.message, 'error');
+            }
+        }
+
+        // AI生成词汇对
+        async function generateWords() {
+            const theme = document.getElementById('generateTheme').value.trim();
+            const difficulty = document.getElementById('generateDifficulty').value;
+            const count = parseInt(document.getElementById('generateCount').value);
+
+            if (!theme) {
+                showMessage('请输入主题', 'error');
+                return;
+            }
+
+            try {
+                showMessage('AI正在生成词汇对，请稍候...', 'info');
+                
+                const response = await fetch('/api/game/words/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        theme: theme,
+                        difficulty: difficulty,
+                        count: count
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    generatedWordPairs = result.word_pairs;
+                    displayGeneratedWords(result.word_pairs);
+                    showMessage(`成功生成${result.word_pairs.length}对词汇`, 'success');
+                } else {
+                    showMessage(result.error || 'AI生成失败', 'error');
+                }
+            } catch (error) {
+                showMessage('AI生成失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示生成的词汇对
+        function displayGeneratedWords(wordPairs) {
+            const container = document.getElementById('generatedWords');
+            const resultDiv = document.getElementById('generateResult');
+            
+            const wordsHtml = wordPairs.map((pair, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex-1">
+                        <span class="font-medium">${pair.public_word}</span>
+                        <span class="text-gray-500 mx-2">vs</span>
+                        <span class="font-medium">${pair.undercover_word}</span>
+                        <span class="text-xs text-gray-500 ml-2">(${pair.difficulty})</span>
+                    </div>
+                    <button onclick="removeGeneratedWord(${index})" class="text-red-500 hover:text-red-700 transition">
+                        ❌
+                    </button>
+                </div>
+            `).join('');
+            
+            container.innerHTML = wordsHtml;
+            resultDiv.classList.remove('hidden');
+        }
+
+        // 移除生成的词汇对
+        function removeGeneratedWord(index) {
+            generatedWordPairs.splice(index, 1);
+            displayGeneratedWords(generatedWordPairs);
+        }
+
+        // 保存生成的词汇对
+        async function saveGeneratedWords() {
+            if (generatedWordPairs.length === 0) {
+                showMessage('没有可保存的词汇对', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/game/words/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        word_pairs: generatedWordPairs
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(`成功保存${result.added_count}对词汇到词库`, 'success');
+                    generatedWordPairs = [];
+                    document.getElementById('generateResult').classList.add('hidden');
+                    hideGenerateForm();
+                    loadWords();
+                } else {
+                    showMessage(result.error || '保存失败', 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除词汇对
+        async function deleteWord(wordId) {
+            if (!confirm('确定要删除这个词汇对吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/game/words/${wordId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('词汇对删除成功', 'success');
+                    loadWords();
+                } else {
+                    showMessage(result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            const messageId = 'msg-' + Date.now();
+            
+            const colors = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'info': 'bg-blue-500',
+                'warning': 'bg-yellow-500'
+            };
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = `${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg mb-2 animate-slide-up`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="removeMessage('${messageId}')" class="ml-4 text-white hover:text-gray-200">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                removeMessage(messageId);
+            }, 3000);
+        }
+
+        // 移除消息
+        function removeMessage(messageId) {
+            const messageDiv = document.getElementById(messageId);
+            if (messageDiv) {
+                messageDiv.remove();
+            }
+        }
+    </script>
+</body>
+</html>

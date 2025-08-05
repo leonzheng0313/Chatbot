@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatSanctuary - 心灵小屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sanctuary-blue': '#B5C6E0',
+                        'sanctuary-cream': '#FAF4EC',
+                        'sanctuary-pink': '#FADADD',
+                        'sanctuary-soft': '#E8F4F8'
+                    },
+                    animation: {
+                        'bounce-gentle': 'bounce 1s ease-in-out 3',
+                        'typing': 'typing 1.5s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.8s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'painting': 'painting 2s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        typing: {
+                            '0%, 60%, 100%': { opacity: '1' },
+                            '30%': { opacity: '0.4' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        painting: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(10deg)' },
+                            '75%': { transform: 'rotate(-10deg)' },
+                            '100%': { transform: 'rotate(0deg)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(181, 198, 224, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(181, 198, 224, 0.8)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-gradient-to-br from-sanctuary-cream via-sanctuary-soft to-sanctuary-blue min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white/80 backdrop-blur-sm shadow-lg">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4">
+            <div class="flex justify-between items-center py-3 sm:py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-sanctuary-blue to-sanctuary-pink rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">🏠</span>
+                    </div>
+                    <h1 class="text-lg sm:text-2xl font-bold text-gray-800">ChatSanctuary</h1>
+                    <span class="text-sm text-gray-500 hidden sm:inline">心灵小屋</span>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <a href="/" class="bg-gray-100 hover:bg-gray-200 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-center">
+                        ← 返回首页
+                    </a>
+                    <button onclick="showMyGallery()" class="bg-sanctuary-blue hover:bg-sanctuary-blue/80 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition">
+                        🖼️ 我的心情图册
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <!-- Step 1: 情绪树洞输入区 -->
+        <div id="emotionInputSection" class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 animate-fade-in">
+            <div class="text-center mb-6">
+                <div class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🌸 心灵小屋</div>
+                <div class="text-sanctuary-blue text-sm sm:text-base mb-4">
+                    欢迎来到心灵小屋，这里是你的情感避风港～<br>
+                    无论是今天的小确丧，还是说不出口的纠结，都可以在这里轻声诉说
+                </div>
+            </div>
+            
+            <div class="max-w-2xl mx-auto">
+                <div class="mb-4">
+                    <input id="userNameInput" 
+                        placeholder="告诉我你的名字..." 
+                        class="w-full p-3 border-2 border-sanctuary-pink/30 rounded-xl focus:ring-2 focus:ring-sanctuary-pink focus:border-transparent text-sm sm:text-base bg-white/80 backdrop-blur-sm"
+                        onkeypress="handleNameKeyPress(event)">
+                    <div class="text-xs text-sanctuary-pink mt-1">💝 虚拟朋友们想知道怎么称呼你</div>
+                </div>
+                <textarea id="emotionInput" 
+                    placeholder="在这里倾诉你的心声..." 
+                    class="w-full p-4 border-2 border-sanctuary-blue/30 rounded-xl focus:ring-2 focus:ring-sanctuary-blue focus:border-transparent resize-none h-32 text-sm sm:text-base bg-white/80 backdrop-blur-sm"
+                    onkeypress="handleEmotionKeyPress(event)"></textarea>
+                
+                <div class="mt-3 text-xs sm:text-sm text-gray-500 space-y-1">
+                    <div class="font-medium text-sanctuary-blue">💭 例：</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setExampleText('我今天有点emo...')" class="bg-sanctuary-pink/30 hover:bg-sanctuary-pink/50 px-3 py-1 rounded-full transition text-xs">
+                            我今天有点emo...
+                        </button>
+                        <button onclick="setExampleText('我纠结要不要换方向')" class="bg-sanctuary-blue/30 hover:bg-sanctuary-blue/50 px-3 py-1 rounded-full transition text-xs">
+                            我纠结要不要换方向
+                        </button>
+                        <button onclick="setExampleText('有点不被理解的感觉')" class="bg-sanctuary-cream hover:bg-sanctuary-cream/80 px-3 py-1 rounded-full transition text-xs">
+                            有点不被理解的感觉
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="startSanctuarySession()" 
+                        class="bg-gradient-to-r from-sanctuary-blue to-sanctuary-pink hover:from-sanctuary-blue/80 hover:to-sanctuary-pink/80 text-white px-6 sm:px-8 py-3 rounded-xl font-medium transition transform hover:scale-105 text-sm sm:text-base shadow-lg">
+                        🌱 开始心灵对话
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: 虚拟朋友选择与群聊区 -->
+        <div id="chatSection" class="hidden">
+            <!-- 当前参与角色显示 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800">🤗 陪伴你的虚拟朋友</h3>
+                    <button onclick="showCharacterSelector()" class="bg-sanctuary-blue/20 hover:bg-sanctuary-blue/30 text-sanctuary-blue px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition">
+                        👥 选择朋友
+                    </button>
+                </div>
+                <div id="selectedCharactersDisplay" class="flex flex-wrap gap-2 sm:gap-3">
+                    <div class="text-gray-500 text-sm">请选择要陪伴你的虚拟朋友</div>
+                </div>
+            </div>
+
+            <!-- 聊天消息区域 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg mb-4 sm:mb-6 h-[60vh] sm:h-[500px]">
+                <div class="p-3 sm:p-4 border-b border-gray-200">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800">💬 心灵对话空间</h3>
+                    <div class="text-xs text-sanctuary-blue mt-1">虚拟朋友们在这里陪伴你，一起探讨和理解</div>
+                </div>
+                <div id="chatMessages" class="p-3 sm:p-4 h-[calc(60vh-80px)] sm:h-80 overflow-y-auto">
+                    <div id="chatWelcomeMessage" class="text-center text-gray-500 text-sm py-8">
+                        <div class="mb-4">
+                            <div class="text-lg mb-2">🌸 心灵对话即将开始</div>
+                            <div class="text-gray-400 mb-4">选择虚拟朋友后，他们会陪伴你一起探索内心~</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 对话控制区 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-3 sm:p-4">
+                <div class="text-center">
+                    <div class="text-sanctuary-blue text-sm mb-3">
+                        💭 虚拟朋友们正在自动为你深入探讨这个话题...
+                    </div>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <button onclick="continueDiscussion()" id="continueBtn" 
+                            class="bg-sanctuary-blue/20 hover:bg-sanctuary-blue/30 text-sanctuary-blue px-4 py-2 rounded-lg text-sm transition">
+                            🔄 继续讨论
+                        </button>
+                        <button onclick="triggerImageGeneration()" id="generateImageBtn" 
+                            class="bg-sanctuary-pink/30 hover:bg-sanctuary-pink/50 text-sanctuary-pink px-4 py-2 rounded-lg text-sm transition">
+                            🎨 生成心情画作
+                        </button>
+                        <button onclick="clearSanctuaryChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition">
+                            重新开始
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3 & 4: 图像生成与展示模态框 -->
+    <div id="imageGenerationModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-2 sm:p-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+            <!-- 生成中状态 -->
+            <div id="generatingState" class="text-center py-8">
+                <div class="text-6xl mb-4 animate-painting">🎨</div>
+                <div class="text-xl font-semibold text-gray-800 mb-2">正在为你画画中...</div>
+                <div class="text-sanctuary-blue text-sm mb-4">虚拟朋友们正在用心为你创作</div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                    <div id="progressBar" class="bg-gradient-to-r from-sanctuary-blue to-sanctuary-pink h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <div id="generatingText" class="text-xs text-gray-500">分析情绪内容...</div>
+            </div>
+
+            <!-- 生成完成状态 -->
+            <div id="generatedState" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="text-xl font-semibold text-gray-800 mb-2">🎁 这是我们共同为你画的</div>
+                    <div class="text-sanctuary-blue text-sm" id="aiCollaborationText"></div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-sanctuary-cream to-sanctuary-soft rounded-xl p-4 mb-6">
+                    <div id="generatedImageContainer" class="text-center mb-4">
+                        <!-- 生成的图像将在这里显示 -->
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <div class="text-lg font-semibold text-gray-800 mb-2">
+                            🎁 图名：<span id="imageTitle"></span>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-3 hidden">
+                            🎨 画面描述：<span id="imagePrompt"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3" id="aiMessages">
+                        <!-- 虚拟朋友赠语将在这里显示 -->
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button onclick="saveToGallery()" class="flex-1 bg-sanctuary-blue hover:bg-sanctuary-blue/80 text-white px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                        💾 收藏到图册
+                    </button>
+                    <button onclick="generateMemoryCard()" class="flex-1 bg-sanctuary-pink hover:bg-sanctuary-pink/80 text-white px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                        📄 生成纪念卡片
+                    </button>
+                    <button onclick="closeImageModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色选择模态框 -->
+    <div id="characterSelectorModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-2 sm:p-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg sm:text-xl font-bold mb-4">选择陪伴你的虚拟朋友</h3>
+            <div id="charactersList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                <!-- 角色列表将动态加载 -->
+            </div>
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                <button onclick="hideCharacterSelector()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                    取消
+                </button>
+                <button onclick="confirmCharacterSelection()" class="flex-1 bg-sanctuary-blue hover:bg-sanctuary-blue/80 text-white px-4 py-2 rounded-lg transition text-sm sm:text-base">
+                    确认选择
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的心情图册模态框 -->
+    <div id="galleryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-2 sm:p-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg sm:text-xl font-bold">🖼️ 我的心情图册</h3>
+                <button onclick="hideGallery()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+            <div id="galleryContent" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- 图册内容将动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片详情查看模态框 -->
+    <div id="imageDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60] p-2 sm:p-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg sm:text-xl font-bold">🎨 心情画作详情</h3>
+                <button onclick="hideImageDetail()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+            <div id="imageDetailContent">
+                <!-- 图片详情内容将动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-40 hidden">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-sanctuary-blue mx-auto mb-4"></div>
+            <p class="text-gray-600">虚拟朋友们正在思考中...</p>
+        </div>
+    </div>
+
+    <script>
+        let allCharacters = [];
+        let selectedCharacterIds = [];
+        let chatHistory = [];
+        let currentEmotion = '';
+        let userName = '';
+        let isTyping = false;
+        let sessionId = generateSessionId();
+        let conversationRounds = 0;
+        let maxRounds = 3; // 动态计算的对话轮次，根据虚拟朋友数量调整
+
+        // 根据选择的虚拟朋友数量动态计算对话轮次
+        function calculateMaxRounds(characterCount) {
+            if (characterCount <= 0) return 2;
+            // 1个虚拟朋友：6轮，2个虚拟朋友：5轮，3个虚拟朋友：4轮，以此类推
+            // 但最少保证2轮对话
+            const rounds = Math.max(2, 7 - characterCount);
+            return rounds;
+        }
+        let savedImages = JSON.parse(localStorage.getItem('sanctuaryImages') || '[]');
+
+        // 生成会话ID
+        function generateSessionId() {
+            return 'sanctuary_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+            loadSelectedCharacters();
+        });
+
+        // 设置示例文本
+        function setExampleText(text) {
+            document.getElementById('emotionInput').value = text;
+        }
+
+        // 处理用户名输入回车键
+        function handleNameKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('emotionInput').focus();
+            }
+        }
+
+        // 处理情绪输入回车键
+        function handleEmotionKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                startSanctuarySession();
+            }
+        }
+
+        // 开始心灵对话会话
+        function startSanctuarySession() {
+            const emotionText = document.getElementById('emotionInput').value.trim();
+            const userNameText = document.getElementById('userNameInput').value.trim();
+            
+            if (!emotionText) {
+                showNotification('请先分享你的心声', 'error');
+                return;
+            }
+            
+            currentEmotion = emotionText;
+            userName = userNameText || '朋友'; // 如果没有输入名字，默认称呼为"朋友"
+            
+            // 隐藏输入区，显示聊天区
+            document.getElementById('emotionInputSection').classList.add('hidden');
+            document.getElementById('chatSection').classList.remove('hidden');
+            
+            // 如果没有选择角色，自动显示角色选择器
+            if (selectedCharacterIds.length === 0) {
+                showCharacterSelector();
+            } else {
+                // 开始对话
+                initializeSanctuaryChat();
+            }
+        }
+
+        // 初始化心灵对话
+        function initializeSanctuaryChat() {
+            // 清空聊天记录
+            chatHistory = [];
+            conversationRounds = 0;
+            
+            // 确保对话轮次根据当前选择的虚拟朋友数量正确设置
+            maxRounds = calculateMaxRounds(selectedCharacterIds.length);
+            
+            // 添加用户的初始情绪表达
+            addMessageToChat('你', currentEmotion, 'user');
+            
+            // 开始虚拟朋友回复
+            setTimeout(() => {
+                startVirtualFriendsDiscussion();
+            }, 1000);
+        }
+        
+        // 继续讨论功能
+        function continueDiscussion() {
+            if (isTyping) {
+                showNotification('虚拟朋友们还在思考中，请稍等...', 'info');
+                return;
+            }
+            
+            if (conversationRounds >= maxRounds) {
+                showNotification('讨论已经很深入了，让我们生成一幅画来总结吧', 'info');
+                setTimeout(() => {
+                    showImageGenerationPrompt();
+                }, 1000);
+                return;
+            }
+            
+            startAIDiscussion();
+        }
+
+        // 开始虚拟朋友讨论 - 流式返回
+        async function startVirtualFriendsDiscussion() {
+            if (selectedCharacterIds.length === 0) {
+                showNotification('请先选择虚拟朋友', 'error');
+                return;
+            }
+            
+            isTyping = true;
+            
+            try {
+                // 逐个角色进行对话，实现流式效果
+                for (let i = 0; i < selectedCharacterIds.length; i++) {
+                    const characterId = selectedCharacterIds[i];
+                    const character = allCharacters.find(c => c.id === characterId);
+                    
+                    if (!character) continue;
+                    
+                    // 显示当前角色的输入指示器
+                    showSingleTypingIndicator(characterId);
+                    
+                    try {
+                        const response = await fetch('/api/sanctuary/discuss', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                character_ids: [characterId], // 单个角色
+                                emotion: currentEmotion,
+                                chat_history: chatHistory,
+                                session_id: sessionId,
+                                round: conversationRounds,
+                                user_name: userName
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        // 移除当前角色的输入指示器
+                        removeSingleTypingIndicator(characterId);
+                        
+                        if (result.responses && result.responses.length > 0) {
+                            const characterResponse = result.responses[0];
+                            
+                            // 添加一些随机延迟，模拟真实对话
+                            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+                            
+                            addMessageToChat(
+                                characterResponse.character_name,
+                                characterResponse.message,
+                                'character',
+                                characterResponse.character_id
+                            );
+                        }
+                    } catch (error) {
+                        console.error(`角色 ${character.name} 回复失败:`, error);
+                        removeSingleTypingIndicator(characterId);
+                        // 继续下一个角色，不中断整个流程
+                    }
+                    
+                    // 角色间的间隔
+                    if (i < selectedCharacterIds.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+                    }
+                }
+                
+                conversationRounds++;
+                
+                // 检查是否应该触发图像生成
+                if (conversationRounds >= maxRounds) {
+                    setTimeout(() => {
+                        showImageGenerationPrompt();
+                    }, 2000);
+                } else {
+                    // 自动继续下一轮讨论
+                    setTimeout(() => {
+                        startVirtualFriendsDiscussion();
+                    }, 2000 + Math.random() * 3000); // 2-5秒后自动继续，让讨论更流畅
+                }
+            } catch (error) {
+                console.error('虚拟朋友讨论失败:', error);
+                showNotification('连接失败，请重试', 'error');
+            } finally {
+                isTyping = false;
+            }
+        }
+
+        // 显示图像生成提示
+        function showImageGenerationPrompt() {
+            const characterNames = selectedCharacterIds.map(id => {
+                const character = allCharacters.find(c => c.id === id);
+                return character ? character.name : '虚拟朋友';
+            }).join('、');
+            
+            const userDisplayName = userName || '朋友';
+            const promptMessage = `🎨 ${characterNames}坐下来认真讨论了${userDisplayName}的话，他们说：如果能把这种感觉变成一幅画，那也许${userDisplayName}会感觉轻一点… 所以——这是我们共同为${userDisplayName}画的。`;
+            
+            addMessageToChat('系统', promptMessage, 'system');
+            
+            // 自动触发图像生成
+            setTimeout(() => {
+                triggerImageGeneration();
+            }, 2000);
+        }
+
+        // 触发图像生成
+        function triggerImageGeneration() {
+            document.getElementById('imageGenerationModal').classList.remove('hidden');
+            document.getElementById('imageGenerationModal').classList.add('flex');
+            
+            generateHealingImage();
+        }
+
+        // 生成治愈图像
+        async function generateHealingImage() {
+            const progressBar = document.getElementById('progressBar');
+            const generatingText = document.getElementById('generatingText');
+            
+            const characterNames = selectedCharacterIds.map(id => {
+                const character = allCharacters.find(c => c.id === id);
+                return character ? character.name : '虚拟朋友';
+            }).join('、');
+            
+            const userDisplayName = userName || '朋友';
+            const steps = [
+                { progress: 20, text: `🎁 ${characterNames}正在为${userDisplayName}画画中...` },
+                { progress: 40, text: `💭 理解${userDisplayName}的内心感受...` },
+                { progress: 60, text: '🎨 构思治愈的画面...' },
+                { progress: 80, text: '✨ 用心绘制每一笔...' },
+                { progress: 100, text: `🌸 完成了专属于${userDisplayName}的画作...` }
+            ];
+            
+            // 模拟进度
+            for (let step of steps) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                progressBar.style.width = step.progress + '%';
+                generatingText.textContent = step.text;
+            }
+            
+            try {
+                const response = await fetch('/api/sanctuary/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        emotion: currentEmotion,
+                        chat_history: chatHistory,
+                        character_ids: selectedCharacterIds,
+                        session_id: sessionId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayGeneratedImage(result);
+                } else {
+                    showNotification('图像生成失败，请重试', 'error');
+                    closeImageModal();
+                }
+            } catch (error) {
+                console.error('图像生成失败:', error);
+                showNotification('生成失败，请重试', 'error');
+                closeImageModal();
+            }
+        }
+
+        // 显示生成的图像
+        function displayGeneratedImage(result) {
+            document.getElementById('generatingState').classList.add('hidden');
+            document.getElementById('generatedState').classList.remove('hidden');
+            
+            // 设置协作文本
+            const characterNames = selectedCharacterIds.map(id => {
+                const character = allCharacters.find(c => c.id === id);
+                return character ? character.name : '虚拟朋友';
+            }).join('、');
+            
+            document.getElementById('aiCollaborationText').textContent = 
+                `${characterNames}用心为你创作了这幅画`;
+            
+            // 显示图像
+            const imageContainer = document.getElementById('generatedImageContainer');
+            imageContainer.innerHTML = `
+                <img src="${result.image_url}" alt="${result.title}" 
+                     class="max-w-full h-auto rounded-lg shadow-lg mx-auto animate-fade-in" 
+                     style="max-height: 300px;">
+            `;
+            
+            // 设置标题和提示词
+            document.getElementById('imageTitle').textContent = result.title;
+            document.getElementById('imagePrompt').textContent = result.prompt;
+            
+            // 显示虚拟朋友赠语
+            const aiMessagesContainer = document.getElementById('aiMessages');
+            aiMessagesContainer.innerHTML = '<div class="text-sm font-medium text-sanctuary-blue mb-3">🗨️ 虚拟朋友赠语：</div>';
+            
+            if (result.ai_messages) {
+                result.ai_messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'bg-white/50 rounded-lg p-3 text-sm mb-2';
+                    messageDiv.innerHTML = `
+                        <div class="font-medium text-sanctuary-blue mb-1">- ${msg.character_name}：</div>
+                        <div class="text-gray-700 italic pl-2">"${msg.message}"</div>
+                    `;
+                    aiMessagesContainer.appendChild(messageDiv);
+                });
+            }
+            
+            // 保存到当前会话
+            window.currentGeneratedImage = result;
+        }
+
+        // 保存到图册
+        function saveToGallery() {
+            if (window.currentGeneratedImage) {
+                const imageData = {
+                    ...window.currentGeneratedImage,
+                    original_emotion: currentEmotion,
+                    created_at: new Date().toISOString(),
+                    id: Date.now()
+                };
+                
+                savedImages.unshift(imageData);
+                localStorage.setItem('sanctuaryImages', JSON.stringify(savedImages));
+                
+                showNotification('已保存到心情图册', 'success');
+            }
+        }
+
+        // 生成纪念卡片
+        function generateMemoryCard() {
+            if (window.currentGeneratedImage) {
+                const cardData = {
+                    image: window.currentGeneratedImage,
+                    originalEmotion: currentEmotion,
+                    aiMessages: window.currentGeneratedImage.ai_messages,
+                    createdAt: new Date().toLocaleString('zh-CN')
+                };
+                
+                // 创建纪念卡片HTML
+                const cardHtml = `
+                    <div class="bg-white p-6 rounded-xl shadow-lg max-w-md mx-auto">
+                        <div class="text-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">💝 心灵纪念卡片</h3>
+                            <div class="text-xs text-gray-500">${cardData.createdAt}</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <img src="${cardData.image.image_url}" alt="${cardData.image.title}" class="w-full h-40 object-cover rounded-lg">
+                        </div>
+                        
+                        <div class="mb-4">
+                             <div class="text-sm font-medium text-blue-600 mb-2">🌸 原始心声：</div>
+                             <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded italic">"${cardData.originalEmotion}"</div>
+                         </div>
+                         
+                         <div class="mb-4">
+                             <div class="text-sm font-medium text-blue-600 mb-2">🎁 图名：${cardData.image.title}</div>
+                         </div>
+                         
+                         <div>
+                             <div class="text-sm font-medium text-blue-600 mb-2">💌 虚拟朋友赠语：</div>
+                            ${cardData.aiMessages ? cardData.aiMessages.map(msg => 
+                                `<div class="text-xs text-gray-600 mb-1">- ${msg.character_name}：'${msg.message}'</div>`
+                            ).join('') : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // 创建新窗口显示纪念卡片
+                const newWindow = window.open('', '_blank', 'width=400,height=600');
+                newWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>心灵纪念卡片</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                        </head>
+                        <body class="bg-gray-100 p-4">
+                            ${cardHtml}
+                            <div class="text-center mt-4">
+                                 <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">🖨️ 打印保存</button>
+                             </div>
+                        </body>
+                    </html>
+                `);
+                newWindow.document.close();
+                
+                showNotification('纪念卡片已生成', 'success');
+            }
+        }
+
+        // 关闭图像模态框
+        function closeImageModal() {
+            document.getElementById('imageGenerationModal').classList.add('hidden');
+            document.getElementById('imageGenerationModal').classList.remove('flex');
+            
+            // 重置状态
+            document.getElementById('generatingState').classList.remove('hidden');
+            document.getElementById('generatedState').classList.add('hidden');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('generatingText').textContent = '分析情绪内容...';
+        }
+
+        // 显示我的图册
+        function showMyGallery() {
+            const galleryContent = document.getElementById('galleryContent');
+            galleryContent.innerHTML = '';
+            
+            if (savedImages.length === 0) {
+                galleryContent.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <div class="text-4xl mb-2">🖼️</div>
+                        <div>还没有保存的心情画作</div>
+                        <div class="text-sm mt-2">开始一次心灵对话，创作你的第一幅画吧</div>
+                    </div>
+                `;
+            } else {
+                savedImages.forEach((image, index) => {
+                    const imageCard = document.createElement('div');
+                    imageCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer';
+                    imageCard.onclick = () => showImageDetail(image);
+                    imageCard.innerHTML = `
+                        <img src="${image.image_url}" alt="${image.title}" class="w-full h-40 object-cover">
+                        <div class="p-3">
+                            <div class="font-semibold text-sm mb-1">${image.title}</div>
+                            <div class="text-xs text-gray-500 mb-2">${new Date(image.created_at).toLocaleDateString()}</div>
+                            <div class="text-xs text-gray-600 line-clamp-2">${image.original_emotion}</div>
+                            <div class="text-xs text-sanctuary-blue mt-2">点击查看详情</div>
+                        </div>
+                    `;
+                    galleryContent.appendChild(imageCard);
+                });
+            }
+            
+            document.getElementById('galleryModal').classList.remove('hidden');
+            document.getElementById('galleryModal').classList.add('flex');
+        }
+
+        // 隐藏图册
+        function hideGallery() {
+            document.getElementById('galleryModal').classList.add('hidden');
+            document.getElementById('galleryModal').classList.remove('flex');
+        }
+
+        // 显示图片详情
+        function showImageDetail(image) {
+            const detailContent = document.getElementById('imageDetailContent');
+            
+            detailContent.innerHTML = `
+                <div class="text-center mb-6">
+                    <img src="${image.image_url}" alt="${image.title}" class="w-full max-h-80 object-contain rounded-lg shadow-lg mx-auto">
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">🎨 ${image.title}</h4>
+                        <div class="text-sm text-gray-500">${new Date(image.created_at).toLocaleString('zh-CN')}</div>
+                    </div>
+                    
+                    <div>
+                        <div class="text-sm font-medium text-sanctuary-blue mb-2">🌸 原始心声：</div>
+                        <div class="text-sm text-gray-700 bg-sanctuary-cream/50 p-3 rounded-lg italic">"${image.original_emotion}"</div>
+                    </div>
+                    
+                    ${image.ai_messages ? `
+                        <div>
+                            <div class="text-sm font-medium text-sanctuary-blue mb-2">💌 虚拟朋友赠语：</div>
+                            <div class="space-y-2">
+                                ${image.ai_messages.map(msg => `
+                                    <div class="bg-white/80 rounded-lg p-3 text-sm">
+                                        <div class="font-medium text-sanctuary-blue mb-1">- ${msg.character_name}：</div>
+                                        <div class="text-gray-700 italic pl-2">"${msg.message}"</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="flex flex-col space-y-3 mt-6">
+                    <button onclick="backToGallery()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition text-sm border">
+                        ↩️ 返回心情图册
+                    </button>
+                    <button onclick="generateMemoryCardFromImage('${image.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium">
+                        📄 生成纪念卡片
+                    </button>
+                    <button onclick="hideImageDetail()" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        关闭
+                    </button>
+                </div>
+            `;
+            
+            // 先关闭图册弹窗
+            hideGallery();
+            
+            // 显示详情弹窗
+            document.getElementById('imageDetailModal').classList.remove('hidden');
+            document.getElementById('imageDetailModal').classList.add('flex');
+        }
+
+        // 隐藏图片详情
+        function hideImageDetail() {
+            document.getElementById('imageDetailModal').classList.add('hidden');
+            document.getElementById('imageDetailModal').classList.remove('flex');
+        }
+
+        // 返回心情图册
+        function backToGallery() {
+            hideImageDetail();
+            showMyGallery();
+        }
+
+        // 从图册图片生成纪念卡片
+        function generateMemoryCardFromImage(imageId) {
+            const image = savedImages.find(img => img.id == imageId);
+            if (image) {
+                const cardData = {
+                    image: image,
+                    originalEmotion: image.original_emotion,
+                    aiMessages: image.ai_messages,
+                    createdAt: new Date(image.created_at).toLocaleString('zh-CN')
+                };
+                
+                // 创建纪念卡片HTML
+                const cardHtml = `
+                    <div class="bg-white p-6 rounded-xl shadow-lg max-w-md mx-auto">
+                        <div class="text-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">💝 心灵纪念卡片</h3>
+                            <div class="text-xs text-gray-500">${cardData.createdAt}</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <img src="${cardData.image.image_url}" alt="${cardData.image.title}" class="w-full h-40 object-cover rounded-lg">
+                        </div>
+                        
+                        <div class="mb-4">
+                             <div class="text-sm font-medium text-blue-600 mb-2">🌸 原始心声：</div>
+                             <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded italic">"${cardData.originalEmotion}"</div>
+                         </div>
+                         
+                         <div class="mb-4">
+                             <div class="text-sm font-medium text-blue-600 mb-2">🎁 图名：${cardData.image.title}</div>
+                         </div>
+                         
+                         <div>
+                             <div class="text-sm font-medium text-blue-600 mb-2">💌 虚拟朋友赠语：</div>
+                            ${cardData.aiMessages ? cardData.aiMessages.map(msg => 
+                                `<div class="text-xs text-gray-600 mb-1">- ${msg.character_name}：'${msg.message}'</div>`
+                            ).join('') : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // 创建新窗口显示纪念卡片
+                const newWindow = window.open('', '_blank', 'width=400,height=600');
+                newWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>心灵纪念卡片</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                        </head>
+                        <body class="bg-gray-100 p-4">
+                            ${cardHtml}
+                            <div class="text-center mt-4">
+                                 <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">🖨️ 打印保存</button>
+                             </div>
+                        </body>
+                    </html>
+                `);
+                newWindow.document.close();
+                
+                showNotification('纪念卡片已生成', 'success');
+            }
+        }
+
+        // 清空聊天并重新开始
+        function clearSanctuaryChat() {
+            chatHistory = [];
+            conversationRounds = 0;
+            currentEmotion = '';
+            sessionId = generateSessionId();
+            
+            document.getElementById('chatSection').classList.add('hidden');
+            document.getElementById('emotionInputSection').classList.remove('hidden');
+            document.getElementById('emotionInput').value = '';
+            document.getElementById('chatMessages').innerHTML = `
+                <div id="chatWelcomeMessage" class="text-center text-gray-500 text-sm py-8">
+                    <div class="mb-4">
+                        <div class="text-lg mb-2">🌸 心灵对话即将开始</div>
+                        <div class="text-gray-400 mb-4">虚拟朋友们会自动为你深入探讨话题，无需额外输入~</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('generateImageBtn').classList.add('hidden');
+        }
+
+        // 聊天输入功能已移除，改为完全自动的虚拟朋友讨论模式
+
+        // 以下是从原chat.html复用的函数，需要适配sanctuary主题
+        
+        // 加载所有角色
+        async function loadCharacters() {
+            try {
+                const response = await fetch('/api/characters');
+                allCharacters = await response.json();
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                showNotification('加载角色失败', 'error');
+            }
+        }
+
+        // 从sessionStorage加载已选择的角色
+        function loadSelectedCharacters() {
+            const stored = sessionStorage.getItem('sanctuarySelectedCharacters');
+            if (stored) {
+                selectedCharacterIds = JSON.parse(stored);
+                // 根据恢复的角色数量更新对话轮次
+                maxRounds = calculateMaxRounds(selectedCharacterIds.length);
+                updateSelectedCharactersDisplay();
+            }
+        }
+
+        // 显示角色选择器
+        async function showCharacterSelector() {
+            if (allCharacters.length === 0) {
+                await loadCharacters();
+            }
+            
+            const charactersList = document.getElementById('charactersList');
+            charactersList.innerHTML = '';
+            
+            allCharacters.forEach(character => {
+                const characterCard = createCharacterSelectorCard(character);
+                charactersList.appendChild(characterCard);
+            });
+            
+            document.getElementById('characterSelectorModal').classList.remove('hidden');
+            document.getElementById('characterSelectorModal').classList.add('flex');
+        }
+
+        // 生成头像HTML
+        function generateAvatarHtml(character, sizeClass = 'w-16 h-16') {
+            const avatarType = character.avatar_type || 'initial';
+            const avatarValue = character.avatar_value;
+            const textSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-sm' : sizeClass.includes('w-6') ? 'text-xs' : 'text-base';
+            const emojiSize = sizeClass.includes('w-12') ? 'text-xl' : sizeClass.includes('w-8') ? 'text-lg' : sizeClass.includes('w-6') ? 'text-sm' : 'text-2xl';
+            const marginClass = sizeClass.includes('w-6') ? 'mb-0' : 'mb-2';
+            
+            if (avatarType === 'emoji' && avatarValue) {
+                return `<div class="${sizeClass} bg-gray-100 rounded-full flex items-center justify-center mx-auto ${marginClass} ${emojiSize}">${avatarValue}</div>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                return `<div class="${sizeClass} rounded-full mx-auto ${marginClass} overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
+            } else {
+                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
+                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
+                const bgColor = colors[colorIndex];
+                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+            }
+        }
+
+        // 创建角色选择卡片
+        function createCharacterSelectorCard(character) {
+            const isSelected = selectedCharacterIds.includes(character.id);
+            const card = document.createElement('div');
+            card.className = `border-2 rounded-lg p-4 cursor-pointer transition ${
+                isSelected ? 'border-sanctuary-blue bg-sanctuary-blue/10' : 'border-gray-200 hover:border-sanctuary-blue/50'
+            }`;
+            
+            const avatarHtml = generateAvatarHtml(character, 'w-12 h-12');
+            
+            card.innerHTML = `
+                <div class="text-center">
+                    ${avatarHtml}
+                    <h4 class="font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.name}">${character.name}</h4>
+                    <p class="text-sm text-sanctuary-blue mb-1 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.personality}">${character.personality}</p>
+                    <p class="text-xs text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title="${character.description}">${character.description}</p>
+                    ${isSelected ? '<div class="mt-2 text-sanctuary-blue text-sm">✓ 已选择</div>' : ''}
+                </div>
+            `;
+            
+            card.onclick = () => toggleCharacterSelection(character.id, card);
+            return card;
+        }
+
+        // 切换角色选择状态
+        function toggleCharacterSelection(characterId, cardElement) {
+            const isSelected = selectedCharacterIds.includes(characterId);
+            
+            if (isSelected) {
+                selectedCharacterIds = selectedCharacterIds.filter(id => id !== characterId);
+                cardElement.className = 'border-2 rounded-lg p-4 cursor-pointer transition border-gray-200 hover:border-sanctuary-blue/50';
+                cardElement.querySelector('.mt-2')?.remove();
+            } else {
+                selectedCharacterIds.push(characterId);
+                cardElement.className = 'border-2 rounded-lg p-4 cursor-pointer transition border-sanctuary-blue bg-sanctuary-blue/10';
+                const selectedDiv = document.createElement('div');
+                selectedDiv.className = 'mt-2 text-sanctuary-blue text-sm';
+                selectedDiv.textContent = '✓ 已选择';
+                cardElement.querySelector('.text-center').appendChild(selectedDiv);
+            }
+        }
+
+        // 确认角色选择
+        function confirmCharacterSelection() {
+            if (selectedCharacterIds.length === 0) {
+                showNotification('请至少选择一个虚拟朋友', 'error');
+                return;
+            }
+            
+            // 根据选择的虚拟朋友数量动态更新对话轮次
+            maxRounds = calculateMaxRounds(selectedCharacterIds.length);
+            console.log(`选择了${selectedCharacterIds.length}个虚拟朋友，设置对话轮次为${maxRounds}轮`);
+            
+            sessionStorage.setItem('sanctuarySelectedCharacters', JSON.stringify(selectedCharacterIds));
+            updateSelectedCharactersDisplay();
+            hideCharacterSelector();
+            
+            // 如果是在情绪输入后选择角色，自动开始对话
+            if (currentEmotion) {
+                initializeSanctuaryChat();
+            }
+        }
+
+        // 隐藏角色选择器
+        function hideCharacterSelector() {
+            document.getElementById('characterSelectorModal').classList.add('hidden');
+            document.getElementById('characterSelectorModal').classList.remove('flex');
+        }
+
+        // 更新已选择角色显示
+        function updateSelectedCharactersDisplay() {
+            const display = document.getElementById('selectedCharactersDisplay');
+            
+            if (selectedCharacterIds.length === 0) {
+                display.innerHTML = '<div class="text-gray-500 text-sm">请选择要陪伴你的虚拟朋友</div>';
+                return;
+            }
+            
+            display.innerHTML = '';
+            selectedCharacterIds.forEach(id => {
+                const character = allCharacters.find(c => c.id === id);
+                if (character) {
+                    const characterChip = document.createElement('div');
+                    characterChip.className = 'flex items-center space-x-2 bg-sanctuary-blue/20 text-sanctuary-blue px-3 py-1 rounded-full text-sm';
+                    
+                    const avatarHtml = generateAvatarHtml(character, 'w-6 h-6').replace('mb-2', 'mb-0');
+                    
+                    characterChip.innerHTML = `
+                        ${avatarHtml}
+                        <span class="whitespace-nowrap overflow-hidden text-ellipsis" title="${character.name}">${character.name}</span>
+                    `;
+                    display.appendChild(characterChip);
+                }
+            });
+        }
+
+        // 添加消息到聊天界面
+        function addMessageToChat(sender, message, type, characterId = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const welcomeMessage = document.getElementById('chatWelcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'user') {
+                messageDiv.className = 'flex items-start space-x-3 animate-fade-in mb-4 justify-end';
+                messageDiv.innerHTML = `
+                    <div class="bg-gradient-to-r from-sanctuary-blue to-sanctuary-pink text-white p-3 rounded-lg max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg shadow-lg">
+                        <div class="font-medium text-sm mb-1">${sender}</div>
+                        <div class="break-words">${message}</div>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        你
+                    </div>
+                `;
+            } else if (type === 'system') {
+                messageDiv.className = 'flex justify-center mb-4 animate-fade-in';
+                messageDiv.innerHTML = `
+                    <div class="bg-sanctuary-cream/80 backdrop-blur-sm text-sanctuary-blue p-4 rounded-xl max-w-md text-center border border-sanctuary-blue/20 shadow-lg">
+                        <div class="break-words">${message}</div>
+                    </div>
+                `;
+            } else {
+                messageDiv.className = 'flex items-start animate-fade-in mb-4';
+                
+                const character = allCharacters.find(c => c.id === characterId);
+                let avatarHtml;
+                if (character) {
+                    avatarHtml = generateAvatarHtml(character, 'w-8 h-8');
+                } else {
+                    avatarHtml = `<div class="w-8 h-8 bg-sanctuary-blue rounded-full flex items-center justify-center text-white text-sm font-bold">${sender.charAt(0)}</div>`;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0 mr-3">
+                        ${avatarHtml}
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm p-3 rounded-lg max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg shadow-lg border border-sanctuary-blue/10 animate-glow">
+                        <div class="font-medium text-sm mb-1 text-sanctuary-blue">${sender}</div>
+                        <div class="break-words text-gray-700">${message}</div>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // 添加到聊天历史
+            if (type !== 'system') {
+                chatHistory.push({
+                    sender: sender,
+                    message: message,
+                    type: type,
+                    character_id: characterId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+
+        // 显示输入指示器
+        function showTypingIndicators() {
+            selectedCharacterIds.forEach((id, index) => {
+                setTimeout(() => {
+                    showSingleTypingIndicator(id);
+                }, index * 500);
+            });
+        }
+
+        // 显示单个角色的输入指示器
+        function showSingleTypingIndicator(characterId) {
+            const character = allCharacters.find(c => c.id === characterId);
+            if (character) {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'flex items-start mb-4 typing-indicator';
+                typingDiv.id = `typing-${characterId}`;
+                
+                const avatarHtml = generateAvatarHtml(character, 'w-8 h-8');
+                
+                typingDiv.innerHTML = `
+                    <div class="flex-shrink-0 mr-3">
+                        ${avatarHtml}
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-sanctuary-blue/10">
+                        <div class="font-medium text-sm mb-1 text-sanctuary-blue">${character.name}</div>
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-sanctuary-blue rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-sanctuary-blue rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-2 h-2 bg-sanctuary-blue rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('chatMessages').appendChild(typingDiv);
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+            }
+        }
+
+        // 移除输入指示器
+        function removeTypingIndicators() {
+            document.querySelectorAll('.typing-indicator').forEach(indicator => {
+                indicator.remove();
+            });
+        }
+
+        // 移除单个角色的输入指示器
+        function removeSingleTypingIndicator(characterId) {
+            const typingIndicator = document.getElementById(`typing-${characterId}`);
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg animate-slide-up ${
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'success' ? 'bg-green-500 text-white' :
+                'bg-sanctuary-blue text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
