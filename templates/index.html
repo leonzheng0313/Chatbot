@@ -30,9 +30,6 @@
                     <h1 class="text-2xl font-bold text-gray-800">ChatPersona</h1>
                 </div>
                 <div class="flex space-x-4">
-                    <button onclick="showApiKeyModal()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition">
-                        🔑 API设置
-                    </button>
                     <a href="/undercover" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                         🎭 谁是卧底
                     </a>
@@ -41,6 +38,19 @@
                     </a>
                     <a href="/chat" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                         💬 开始聊天
+                    </a>
+                    {% if not (user and user.role == 'admin') %}
+                    <a href="/profile" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        👤 个人资料
+                    </a>
+                    {% endif %}
+                    {% if user and user.role == 'admin' %}
+                    <a href="/admin" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        ⚙️ 管理后台
+                    </a>
+                    {% endif %}
+                    <a href="/logout" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🚪 退出登录
                     </a>
                 </div>
             </div>
@@ -115,22 +125,7 @@
         </div>
     </div>
 
-    <!-- API Key 设置模态框 -->
-    <div id="apiKeyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 class="text-xl font-bold mb-4">API Key 设置</h3>
-            <p class="text-gray-600 text-sm mb-4">你可以输入自己的百炼 Key，或使用默认通用 Key 体验功能。</p>
-            <input type="password" id="apiKeyInput" placeholder="输入你的阿里云百炼API Key" class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-            <div class="flex space-x-3">
-                <button onclick="hideApiKeyModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-                    取消
-                </button>
-                <button onclick="saveApiKey()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
-                    保存
-                </button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- 编辑角色模态框 -->
     <div id="editCharacterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
@@ -175,7 +170,7 @@
                     <input type="text" id="editCharacterPersonality" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
                 </div>
                 
-                <div class="mb-6">
+                <div id="editPromptContainer" class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">系统提示词</label>
                     <textarea id="editCharacterPrompt" rows="8" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="输入角色的系统提示词..." required></textarea>
                 </div>
@@ -275,9 +270,14 @@
                             预览
                         </button>
                     </div>
-                    <button onclick="editCharacter(${character.id})" class="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-2 rounded-lg text-sm font-medium transition">
-                        ✏️ 编辑角色
-                    </button>
+                    ${character.is_default ? 
+                        `<button class="w-full bg-gray-100 text-gray-500 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                            🔒 默认角色，不可编辑
+                        </button>` :
+                        `<button onclick="editCharacter(${character.id})" class="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-2 rounded-lg text-sm font-medium transition">
+                            ✏️ 编辑角色
+                        </button>`
+                    }
                 </div>
             `;
             
@@ -347,46 +347,7 @@
             document.body.appendChild(modal);
         }
 
-        // API Key 相关函数
-        function showApiKeyModal() {
-            document.getElementById('apiKeyModal').classList.remove('hidden');
-            document.getElementById('apiKeyModal').classList.add('flex');
-        }
 
-        function hideApiKeyModal() {
-            document.getElementById('apiKeyModal').classList.add('hidden');
-            document.getElementById('apiKeyModal').classList.remove('flex');
-        }
-
-        async function saveApiKey() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            if (!apiKey) {
-                showNotification('请输入API Key', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/set-api-key', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ api_key: apiKey })
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    showNotification('API Key 设置成功', 'success');
-                    hideApiKeyModal();
-                    document.getElementById('apiKeyInput').value = '';
-                } else {
-                    showNotification(result.error || 'API Key 设置失败', 'error');
-                }
-            } catch (error) {
-                console.error('设置API Key失败:', error);
-                showNotification('设置失败，请重试', 'error');
-            }
-        }
 
         // 生成头像HTML
         function generateAvatarHtml(character, sizeClass = 'w-16 h-16') {
@@ -400,11 +361,8 @@
             } else if (avatarType === 'upload' && avatarValue) {
                 return `<div class="${sizeClass} rounded-full mx-auto mb-4 overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
             } else {
-                // 默认使用首字母头像
-                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
-                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
-                const bgColor = colors[colorIndex];
-                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto mb-4 text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+                // 默认使用首字母头像（统一使用紫色背景）
+                return `<div class="${sizeClass} bg-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
             }
         }
 
@@ -483,15 +441,19 @@
             const preview = document.getElementById('editAvatarPreview');
             const characterName = document.getElementById('editCharacterName').value || 'A';
             
-            // 创建临时角色对象
-            const tempCharacter = {
-                name: characterName,
-                avatar_type: avatarType,
-                avatar_value: avatarValue
-            };
+            // 直接生成编辑模式的头像HTML，不使用mx-auto mb-4类
+            const textSize = 'text-xl';
+            const emojiSize = 'text-xl';
             
-            // 使用统一的头像生成函数
-            const avatarHtml = generateAvatarHtml(tempCharacter, 'w-12 h-12').replace('mx-auto mb-4', '');
+            let avatarHtml;
+            if (avatarType === 'emoji' && avatarValue) {
+                avatarHtml = `<div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center ${emojiSize}">${avatarValue}</div>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                avatarHtml = `<div class="w-12 h-12 rounded-full overflow-hidden"><img src="${avatarValue}" alt="${characterName}" class="w-full h-full object-cover"></div>`;
+            } else {
+                avatarHtml = `<div class="w-12 h-12 bg-indigo-400 rounded-full flex items-center justify-center text-white ${textSize} font-bold">${characterName.charAt(0)}</div>`;
+            }
+            
             preview.outerHTML = `<div id="editAvatarPreview">${avatarHtml}</div>`;
         }
 
@@ -509,6 +471,17 @@
                     document.getElementById('editCharacterDescription').value = character.description || '';
                     document.getElementById('editCharacterPersonality').value = character.personality || '';
                     document.getElementById('editCharacterPrompt').value = character.system_prompt || '';
+                    
+                    // 根据是否为默认角色控制系统提示词字段的显示
+                    const promptContainer = document.getElementById('editPromptContainer');
+                    const promptTextarea = document.getElementById('editCharacterPrompt');
+                    if (character.is_default) {
+                        promptContainer.style.display = 'none';
+                        promptTextarea.removeAttribute('required');
+                    } else {
+                        promptContainer.style.display = 'block';
+                        promptTextarea.setAttribute('required', 'required');
+                    }
                     
                     // 设置头像信息
                     document.getElementById('editAvatarType').value = character.avatar_type || 'initial';
@@ -537,17 +510,28 @@
             e.preventDefault();
             
             const characterId = document.getElementById('editCharacterId').value;
+            const promptContainer = document.getElementById('editPromptContainer');
+            const isDefaultCharacter = promptContainer.style.display === 'none';
+            
             const formData = {
                 name: document.getElementById('editCharacterName').value.trim(),
                 description: document.getElementById('editCharacterDescription').value.trim(),
                 personality: document.getElementById('editCharacterPersonality').value.trim(),
-                system_prompt: document.getElementById('editCharacterPrompt').value.trim(),
                 avatar_type: document.getElementById('editAvatarType').value,
                 avatar_value: document.getElementById('editAvatarValue').value
             };
             
-            if (!formData.name || !formData.description || !formData.personality || !formData.system_prompt) {
-                showNotification('请填写所有字段', 'error');
+            // 只有非默认角色才需要系统提示词
+            if (!isDefaultCharacter) {
+                formData.system_prompt = document.getElementById('editCharacterPrompt').value.trim();
+                if (!formData.system_prompt) {
+                    showNotification('请填写系统提示词', 'error');
+                    return;
+                }
+            }
+            
+            if (!formData.name || !formData.description || !formData.personality) {
+                showNotification('请填写所有必填字段', 'error');
                 return;
             }
             

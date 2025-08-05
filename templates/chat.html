@@ -203,11 +203,8 @@
             } else if (avatarType === 'upload' && avatarValue) {
                 return `<div class="${sizeClass} rounded-full mx-auto ${marginClass} overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
             } else {
-                // 默认使用首字母头像
-                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
-                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
-                const bgColor = colors[colorIndex];
-                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+                // 默认使用首字母头像（统一使用紫色背景）
+                return `<div class="${sizeClass} bg-indigo-400 rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
             }
         }
 

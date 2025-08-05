@@ -349,11 +349,8 @@
             } else if (avatarType === 'upload' && avatarValue) {
                 return `<div class="${sizeClass} rounded-full overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
             } else {
-                // 默认使用首字母头像
-                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
-                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
-                const bgColor = colors[colorIndex];
-                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+                // 默认使用首字母头像（统一使用紫色背景）
+                return `<div class="${sizeClass} bg-indigo-400 rounded-full flex items-center justify-center text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
             }
         }
 
@@ -449,21 +446,21 @@
                 return;
             }
             
-            let prompt = '你是一个有独特性格的 AI 角色';
+            let prompt = '你是一个具有独特性格的虚拟聊天助手';
             
             if (roleType.length > 0) {
-                prompt += `，身份是${roleType.join('、')}`;
+                prompt += `，扮演${roleType.join('、')}的角色`;
             }
             
             if (personality.length > 0) {
-                prompt += `，性格${personality.join('、')}`;
+                prompt += `，具有${personality.join('、')}的特点`;
             }
             
             if (languageStyle.length > 0) {
-                prompt += `，喜欢用${languageStyle.join('、')}的语气与人交流`;
+                prompt += `，喜欢用${languageStyle.join('、')}的语气进行交流`;
             }
             
-            prompt += '。请始终保持这个角色设定，用符合角色性格的方式回应用户的每一句话。';
+            prompt += '。请始终保持这些特色，以自然友好的方式与用户进行对话交流。';
             
             document.getElementById('generatedPrompt').textContent = prompt;
         }
@@ -606,7 +603,10 @@
                         name: name,
                         personality: personality,
                         description: description,
-                        system_prompt: systemPrompt
+                        system_prompt: systemPrompt,
+                        avatar_type: document.getElementById('avatarType').value,
+                        avatar_value: document.getElementById('avatarValue').value,
+                        creation_mode: currentMode  // 添加创建模式标识
                     })
                 });
                 

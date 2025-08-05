@@ -255,11 +255,8 @@
             } else if (avatarType === 'upload' && avatarValue) {
                 return `<div class="${sizeClass} rounded-full overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
             } else {
-                // 默认使用首字母头像
-                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
-                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
-                const bgColor = colors[colorIndex];
-                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+                // 默认使用首字母头像（统一使用紫色背景）
+                return `<div class="${sizeClass} bg-indigo-400 rounded-full flex items-center justify-center text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
             }
         }
 
@@ -749,7 +746,7 @@
                             addGameFlowMessage(`🏆 游戏结束！${processResult.winner === 'undercover' ? '卧底' : '平民'}获胜`);
                             setTimeout(() => {
                                 showGameResult(processResult.winner, gameState.undercoverIndex);
-                            }, 3000);
+                            }, 1500);
                         } else {
                             addGameFlowMessage(`➡️ 进入第 ${processResult.current_round} 轮`);
                             // 继续下一轮
@@ -757,7 +754,7 @@
                                 document.getElementById('currentRound').textContent = gameState.currentRound;
                                 // 保持投票区域显示，不隐藏
                                 initializeDescriptionArea();
-                            }, 3000);
+                            }, 1500);
                         }
                     } else {
                         throw new Error(processResult.error || '投票处理失败');
@@ -817,10 +814,10 @@
                 voteMessages.appendChild(messageDiv);
                 
                 // 打字机效果显示投票内容
-                await typeText(`vote-text-${i}`, vote.vote_response, 30);
+                await typeText(`vote-text-${i}`, vote.vote_response, 15);
                 
                 // 等待一下再显示下一个
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 300));
             }
         }
         
@@ -889,7 +886,7 @@
         }
         
         // 打字机效果函数
-        async function typeText(elementId, text, speed = 50) {
+        async function typeText(elementId, text, speed = 25) {
             const element = document.getElementById(elementId);
             element.textContent = '';
             

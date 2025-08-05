@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - ChatPersona</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .section h2 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-right: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #c33;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #363;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #363;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>个人资料</h1>
+            <p>管理您的账户信息和设置</p>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">返回首页</a>
+                <a href="/logout" class="nav-btn">退出登录</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 用户统计 -->
+            <div class="section">
+                <h2>使用统计</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="accessCount">-</div>
+                        <div class="stat-label">访问次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="modelCalls">-</div>
+                        <div class="stat-label">模型调用量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="joinDate">-</div>
+                        <div class="stat-label">注册时间</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基本信息 -->
+            <div class="section">
+                <h2>基本信息</h2>
+                <form id="profileForm">
+                    <div id="profileMessage" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" name="username" readonly>
+                        <div class="form-help">用户名不可修改</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <button type="submit" class="btn" id="profileBtn">
+                        更新信息
+                    </button>
+                    <div class="loading" id="profileLoading"></div>
+                </form>
+            </div>
+
+            <!-- API配置 -->
+            <div class="section">
+                <h2>API配置</h2>
+                <form id="apiForm">
+                    <div id="apiMessage" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="apiKey">阿里云百炼API密钥</label>
+                        <div style="position: relative;">
+                            <textarea id="apiKey" name="apiKey" placeholder="请输入您的阿里云百炼API密钥" required style="padding-right: 80px;"></textarea>
+                            <button type="button" id="toggleApiKey" style="position: absolute; right: 10px; top: 10px; background: #667eea; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">显示</button>
+                        </div>
+                        <div class="form-help">用于调用AI模型，请确保密钥有效</div>
+                    </div>
+
+                    <button type="submit" class="btn" id="apiBtn">
+                        更新API密钥
+                    </button>
+                    <div class="loading" id="apiLoading"></div>
+                </form>
+            </div>
+
+            <!-- 密码信息 -->
+            <div class="section">
+                <h2>密码信息</h2>
+                <div class="form-group">
+                    <label>当前密码</label>
+                    <div style="position: relative;">
+                        <input type="password" id="currentPasswordDisplay" value="••••••••" readonly style="padding-right: 120px;">
+                        <button type="button" id="togglePassword" style="position: absolute; right: 80px; top: 50%; transform: translateY(-50%); background: #667eea; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">显示</button>
+                        <button type="button" id="changePasswordBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码模态框 -->
+    <div id="passwordModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div style="background-color: white; margin: 10% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <h3 style="margin: 0; color: #333;">修改密码</h3>
+                <button id="closePasswordModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </div>
+            
+            <form id="passwordForm">
+                <div id="passwordMessage" style="display: none; margin-bottom: 15px;"></div>
+                
+                <div class="form-group">
+                    <label for="currentPassword">当前密码</label>
+                    <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword">新密码</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                    <div class="form-help">密码长度至少6个字符</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmNewPassword">确认新密码</label>
+                    <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" id="cancelPasswordBtn" style="padding: 10px 20px; background: #ccc; color: #333; border: none; border-radius: 5px; cursor: pointer;">取消</button>
+                    <button type="submit" class="btn btn-danger" id="passwordBtn">
+                        修改密码
+                    </button>
+                </div>
+                <div class="loading" id="passwordLoading"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时获取用户信息
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+            initEventListeners();
+        });
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // API密钥显示/隐藏
+            document.getElementById('toggleApiKey').addEventListener('click', function() {
+                const apiKeyField = document.getElementById('apiKey');
+                const toggleBtn = document.getElementById('toggleApiKey');
+                
+                if (apiKeyField.style.webkitTextSecurity === 'disc' || apiKeyField.style.webkitTextSecurity === '') {
+                    apiKeyField.style.webkitTextSecurity = 'none';
+                    toggleBtn.textContent = '隐藏';
+                } else {
+                    apiKeyField.style.webkitTextSecurity = 'disc';
+                    toggleBtn.textContent = '显示';
+                }
+            });
+
+            // 密码显示/隐藏
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordField = document.getElementById('currentPasswordDisplay');
+                const toggleBtn = document.getElementById('togglePassword');
+                
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    passwordField.value = '当前密码已加密存储';
+                    toggleBtn.textContent = '隐藏';
+                } else {
+                    passwordField.type = 'password';
+                    passwordField.value = '••••••••';
+                    toggleBtn.textContent = '显示';
+                }
+            });
+
+            // 打开修改密码弹窗
+            document.getElementById('changePasswordBtn').addEventListener('click', function() {
+                document.getElementById('passwordModal').style.display = 'block';
+            });
+
+            // 关闭修改密码弹窗
+            document.getElementById('closePasswordModal').addEventListener('click', function() {
+                closePasswordModal();
+            });
+
+            document.getElementById('cancelPasswordBtn').addEventListener('click', function() {
+                closePasswordModal();
+            });
+
+            // 点击弹窗外部关闭
+            document.getElementById('passwordModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePasswordModal();
+                }
+            });
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('passwordForm').reset();
+            document.getElementById('passwordMessage').style.display = 'none';
+        }
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/profile?format=json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user) {
+                        document.getElementById('username').value = data.user.username;
+                        document.getElementById('email').value = data.user.email || '';
+                        const apiKeyField = document.getElementById('apiKey');
+                        apiKeyField.value = data.user.api_key || '';
+                        // 默认隐藏API密钥
+                        apiKeyField.style.webkitTextSecurity = 'disc';
+                        document.getElementById('accessCount').textContent = data.user.access_count || 0;
+                        document.getElementById('modelCalls').textContent = data.user.model_calls || 0;
+                        document.getElementById('joinDate').textContent = new Date(data.user.created_at).toLocaleDateString();
+                    }
+                }
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+            }
+        }
+
+        // 更新基本信息
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const messageDiv = document.getElementById('profileMessage');
+            const btn = document.getElementById('profileBtn');
+            const loading = document.getElementById('profileLoading');
+            
+            messageDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = '更新中...';
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '信息更新成功';
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '更新失败';
+                }
+                messageDiv.style.display = 'block';
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '更新信息';
+                loading.style.display = 'none';
+            }
+        });
+
+        // 更新API密钥
+        document.getElementById('apiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const apiKey = document.getElementById('apiKey').value;
+            const messageDiv = document.getElementById('apiMessage');
+            const btn = document.getElementById('apiBtn');
+            const loading = document.getElementById('apiLoading');
+            
+            messageDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = '更新中...';
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = 'API密钥更新成功';
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '更新失败';
+                }
+                messageDiv.style.display = 'block';
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '更新API密钥';
+                loading.style.display = 'none';
+            }
+        });
+
+        // 修改密码
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            const messageDiv = document.getElementById('passwordMessage');
+            const btn = document.getElementById('passwordBtn');
+            const loading = document.getElementById('passwordLoading');
+            
+            messageDiv.style.display = 'none';
+            
+            if (newPassword !== confirmNewPassword) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '两次输入的新密码不一致';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '新密码长度至少6个字符';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '修改中...';
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '密码修改成功';
+                    // 清空表单
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '修改失败';
+                }
+                messageDiv.style.display = 'block';
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '修改密码';
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

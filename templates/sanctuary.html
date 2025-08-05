@@ -164,18 +164,10 @@
             <!-- 对话控制区 -->
             <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-3 sm:p-4">
                 <div class="text-center">
-                    <div class="text-sanctuary-blue text-sm mb-3">
-                        💭 虚拟朋友们正在自动为你深入探讨这个话题...
+                    <div class="text-sanctuary-blue text-sm mb-3" id="statusText">
+                        💭 虚拟朋友们准备为你生成一幅画...
                     </div>
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <button onclick="continueDiscussion()" id="continueBtn" 
-                            class="bg-sanctuary-blue/20 hover:bg-sanctuary-blue/30 text-sanctuary-blue px-4 py-2 rounded-lg text-sm transition">
-                            🔄 继续讨论
-                        </button>
-                        <button onclick="triggerImageGeneration()" id="generateImageBtn" 
-                            class="bg-sanctuary-pink/30 hover:bg-sanctuary-pink/50 text-sanctuary-pink px-4 py-2 rounded-lg text-sm transition">
-                            🎨 生成心情画作
-                        </button>
                         <button onclick="clearSanctuaryChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition">
                             重新开始
                         </button>
@@ -588,6 +580,9 @@
             document.getElementById('generatingState').classList.add('hidden');
             document.getElementById('generatedState').classList.remove('hidden');
             
+            // 更新状态文字
+            document.getElementById('statusText').textContent = '🎨 虚拟朋友们已经为你做了一幅画';
+            
             // 设置协作文本
             const characterNames = selectedCharacterIds.map(id => {
                 const character = allCharacters.find(c => c.id === id);
@@ -970,10 +965,8 @@
             } else if (avatarType === 'upload' && avatarValue) {
                 return `<div class="${sizeClass} rounded-full mx-auto ${marginClass} overflow-hidden"><img src="${avatarValue}" alt="${character.name}" class="w-full h-full object-cover"></div>`;
             } else {
-                const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400'];
-                const colorIndex = character.id ? character.id % colors.length : Math.floor(Math.random() * colors.length);
-                const bgColor = colors[colorIndex];
-                return `<div class="${sizeClass} ${bgColor} rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
+                // 默认使用首字母头像（统一使用紫色背景）
+                return `<div class="${sizeClass} bg-indigo-400 rounded-full flex items-center justify-center mx-auto ${marginClass} text-white ${textSize} font-bold">${character.name.charAt(0)}</div>`;
             }
         }
 

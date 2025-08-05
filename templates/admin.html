@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员面板 - ChatPersona</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active:hover {
+            background: white;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .role-admin {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .role-user {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #c33;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #363;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #363;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>管理员面板</h1>
+        <p>系统管理和用户管理</p>
+        <div class="nav-buttons">
+            <a href="/" class="nav-btn">返回首页</a>
+            <a href="/logout" class="nav-btn">退出登录</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">概览</button>
+            <button class="tab" onclick="showTab('characters')">角色管理</button>
+            <button class="tab" onclick="showTab('users')">用户管理</button>
+            <button class="tab" onclick="showTab('models')">模型配置</button>
+            <button class="tab" onclick="showTab('api')">API配置</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- 概览标签页 -->
+            <div id="overview" class="tab-pane active">
+                <h2 class="section-title">系统概览</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">-</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeUsers">-</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAccess">-</div>
+                        <div class="stat-label">总访问次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalModelCalls">-</div>
+                        <div class="stat-label">总模型调用</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 角色管理标签页 -->
+            <div id="characters" class="tab-pane">
+                <h2 class="section-title">角色管理</h2>
+                <div class="loading" id="charactersLoading"></div>
+                <div class="table-container">
+                    <table id="charactersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>头像</th>
+                                <th>角色名称</th>
+                                <th>性格</th>
+                                <th>类型</th>
+                                <th>创建者</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="charactersTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 用户管理标签页 -->
+            <div id="users" class="tab-pane">
+                <h2 class="section-title">用户管理</h2>
+                <div class="loading" id="usersLoading"></div>
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>访问次数</th>
+                                <th>模型调用</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 模型配置标签页 -->
+            <div id="models" class="tab-pane">
+                <h2 class="section-title">模型配置</h2>
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="showAddModelModal()">添加新配置</button>
+                </div>
+                <div class="loading" id="modelsLoading"></div>
+                <div class="table-container">
+                    <table id="modelsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>配置名称</th>
+                                <th>LLM模型</th>
+                                <th>安全检测模型</th>
+                                <th>生图模型</th>
+                                <th>是否默认</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modelsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- API配置标签页 -->
+            <div id="api" class="tab-pane">
+                <h2 class="section-title">API配置</h2>
+                <div class="form-group">
+                    <label for="adminApiKey">阿里云百炼API密钥</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="password" id="adminApiKey" placeholder="请输入API密钥" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                        <button type="button" class="btn btn-primary" onclick="toggleApiKeyVisibility()">显示</button>
+                        <button type="button" class="btn btn-primary" onclick="saveApiKey()">保存</button>
+                    </div>
+                    <small style="color: #666; margin-top: 0.5rem; display: block;">管理员默认API密钥，用于系统级别的模型调用</small>
+                </div>
+                <div id="apiMessage" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑用户</h3>
+                <button class="close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <form id="editUserForm">
+                <div id="editUserMessage" style="display: none;"></div>
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUserEmail">邮箱</label>
+                    <input type="email" id="editUserEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserRole">角色</label>
+                    <select id="editUserRole" required>
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUserActive">状态</label>
+                    <select id="editUserActive" required>
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">保存更改</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 重置密码模态框 -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">重置密码</h3>
+                <button class="close" onclick="closeModal('resetPasswordModal')">&times;</button>
+            </div>
+            <form id="resetPasswordForm">
+                <div id="resetPasswordMessage" style="display: none;"></div>
+                <input type="hidden" id="resetUserId">
+                <div class="form-group">
+                    <label for="newPassword">新密码</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <button type="submit" class="btn btn-danger">重置密码</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加模型配置模态框 -->
+    <div id="addModelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加模型配置</h3>
+                <button class="close" onclick="closeModal('addModelModal')">&times;</button>
+            </div>
+            <form id="addModelForm">
+                <div id="addModelMessage" style="display: none;"></div>
+                <div class="form-group">
+                    <label for="configName">配置名称</label>
+                    <input type="text" id="configName" required>
+                </div>
+                <div class="form-group">
+                    <label for="llmModel">LLM模型</label>
+                    <input type="text" id="llmModel" placeholder="例如: qwen-plus" required>
+                </div>
+                <div class="form-group">
+                    <label for="securityModel">安全检测模型</label>
+                    <input type="text" id="securityModel" placeholder="例如: deepseek-v3" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageModel">生图模型</label>
+                    <input type="text" id="imageModel" placeholder="例如: wanx2.1-t2i-turbo" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isDefault"> 设为默认配置
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">添加配置</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑模型配置模态框 -->
+    <div id="editModelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑模型配置</h3>
+                <button class="close" onclick="closeModal('editModelModal')">&times;</button>
+            </div>
+            <form id="editModelForm">
+                <div id="editModelMessage" style="display: none;"></div>
+                <input type="hidden" id="editConfigId">
+                <div class="form-group">
+                    <label for="editConfigName">配置名称</label>
+                    <input type="text" id="editConfigName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLlmModel">LLM模型</label>
+                    <input type="text" id="editLlmModel" placeholder="例如: qwen-plus" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSecurityModel">安全检测模型</label>
+                    <input type="text" id="editSecurityModel" placeholder="例如: deepseek-v3" required>
+                </div>
+                <div class="form-group">
+                    <label for="editImageModel">生图模型</label>
+                    <input type="text" id="editImageModel" placeholder="例如: wanx2.1-t2i-turbo" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsDefault"> 设为默认配置
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑角色模态框 -->
+    <div id="editCharacterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑角色</h3>
+                <button class="close" onclick="closeModal('editCharacterModal')">&times;</button>
+            </div>
+            <form id="editCharacterForm">
+                <div id="editCharacterMessage" style="display: none;"></div>
+                <input type="hidden" id="editCharacterId">
+                <div class="form-group">
+                    <label for="editCharacterName">角色名称</label>
+                    <input type="text" id="editCharacterName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCharacterPersonality">性格标签</label>
+                    <input type="text" id="editCharacterPersonality" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCharacterDescription">角色描述</label>
+                    <textarea id="editCharacterDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editCharacterSystemPrompt">系统提示词</label>
+                    <textarea id="editCharacterSystemPrompt" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>头像设置</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div id="editAvatarPreview" style="width: 64px; height: 64px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">A</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="showEditEmojiSelector()" style="background: #dbeafe; color: #1d4ed8; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">😀 选择表情</button>
+                            <button type="button" onclick="document.getElementById('editAvatarUpload').click()" style="background: #dcfce7; color: #166534; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">📁 上传图片</button>
+                            <button type="button" onclick="resetEditToInitial()" style="background: #f3f4f6; color: #374151; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">🔄 重置</button>
+                        </div>
+                    </div>
+                    <input type="file" id="editAvatarUpload" accept="image/*" style="display: none" onchange="handleEditAvatarUpload(event)">
+                    <input type="hidden" id="editAvatarType" value="initial">
+                    <input type="hidden" id="editAvatarValue">
+                    <p style="font-size: 12px; color: #6b7280; margin: 0;">选择表情符号作为头像，或上传自定义图片（最大5MB）</p>
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <button type="button" class="btn btn-danger" onclick="deleteCharacter()">删除角色</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 表情选择器模态框 -->
+    <div id="editEmojiModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">选择表情符号</h3>
+                <button class="close" onclick="hideEditEmojiSelector()">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div id="editEmojiGrid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOverviewStats();
+            loadCharacters();
+            loadUsers();
+            loadModelConfigs();
+            loadApiConfig();
+            
+            // 设置默认API密钥
+            const adminApiKey = document.getElementById('adminApiKey');
+            if (!adminApiKey.value) {
+                adminApiKey.value = 'sk-8963ec64f16a4bd8a9a91221d6049f20';
+            }
+            
+            // 监听角色名称输入，实时更新头像预览
+            const editNameInput = document.getElementById('editCharacterName');
+            if (editNameInput) {
+                editNameInput.addEventListener('input', updateEditAvatarPreview);
+            }
+        });
+
+        // 标签页切换
+        function showTab(tabName) {
+            // 隐藏所有标签页
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 显示选中的标签页
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // 根据标签页加载对应数据
+            if (tabName === 'characters') {
+                loadCharacters();
+            } else if (tabName === 'users') {
+                loadUsers();
+            } else if (tabName === 'models') {
+                loadModelConfigs();
+            }
+        }
+
+        // 加载概览统计
+        async function loadOverviewStats() {
+            try {
+                const response = await fetch('/api/admin/users');
+                if (response.ok) {
+                    const data = await response.json();
+                    const users = data.users || [];
+                    
+                    document.getElementById('totalUsers').textContent = users.length;
+                    document.getElementById('activeUsers').textContent = users.filter(u => u.is_active).length;
+                    document.getElementById('totalAccess').textContent = users.reduce((sum, u) => sum + (u.access_count || 0), 0);
+                    document.getElementById('totalModelCalls').textContent = users.reduce((sum, u) => sum + (u.model_calls || 0), 0);
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 加载角色列表
+        async function loadCharacters() {
+            const loading = document.getElementById('charactersLoading');
+            const tbody = document.getElementById('charactersTableBody');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/admin/characters');
+                if (response.ok) {
+                    const data = await response.json();
+                    const characters = data.characters || [];
+                    
+                    tbody.innerHTML = '';
+                    characters.forEach(character => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${character.id}</td>
+                            <td>
+                                <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f0f0f0;">
+                                    ${generateAvatarHtml(character.avatar_type, character.avatar_value)}
+                                </div>
+                            </td>
+                            <td>${character.name}</td>
+                            <td>${character.personality}</td>
+                            <td><span class="status-badge ${character.is_default ? 'status-active' : 'status-inactive'}">${character.is_default ? '默认角色' : '用户角色'}</span></td>
+                            <td>${character.creator || '系统'}</td>
+                            <td>${character.created_at ? new Date(character.created_at).toLocaleDateString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="editCharacter(${character.id})">编辑</button>
+                                ${!character.is_default ? `<button class="btn btn-danger" onclick="confirmDeleteCharacter(${character.id})">删除</button>` : ''}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加载角色列表失败:', error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 生成头像HTML
+        function generateAvatarHtml(avatarType, avatarValue) {
+            if (avatarType === 'emoji' && avatarValue) {
+                return `<span style="font-size: 20px;">${avatarValue}</span>`;
+            } else if (avatarType === 'upload' && avatarValue) {
+                return `<img src="${avatarValue}" alt="头像" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            } else {
+                return `<span style="font-size: 16px; color: #999;">?</span>`;
+            }
+        }
+
+        // 编辑角色
+        async function editCharacter(characterId) {
+            try {
+                const response = await fetch(`/api/admin/characters/${characterId}`);
+                if (response.ok) {
+                    const character = await response.json();
+                    
+                    document.getElementById('editCharacterId').value = character.id;
+                    document.getElementById('editCharacterName').value = character.name;
+                    document.getElementById('editCharacterPersonality').value = character.personality;
+                    document.getElementById('editCharacterDescription').value = character.description;
+                    document.getElementById('editCharacterSystemPrompt').value = character.system_prompt;
+                    document.getElementById('editAvatarType').value = character.avatar_type || 'initial';
+                    document.getElementById('editAvatarValue').value = character.avatar_value || '';
+                    
+                    // 更新头像预览
+                    updateEditAvatarPreview();
+                    
+                    document.getElementById('editCharacterModal').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('获取角色信息失败:', error);
+                showMessage('editCharacterMessage', '获取角色信息失败', 'error');
+            }
+        }
+
+        // 确认删除角色
+        function confirmDeleteCharacter(characterId) {
+            if (confirm('确定要删除这个角色吗？此操作不可撤销。')) {
+                deleteCharacterById(characterId);
+            }
+        }
+
+        // 删除角色
+        async function deleteCharacter() {
+            const characterId = document.getElementById('editCharacterId').value;
+            if (confirm('确定要删除这个角色吗？此操作不可撤销。')) {
+                await deleteCharacterById(characterId);
+            }
+        }
+
+        // 删除角色（通用函数）
+        async function deleteCharacterById(characterId) {
+            try {
+                const response = await fetch(`/api/admin/characters/${characterId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage('editCharacterMessage', '角色删除成功', 'success');
+                    closeModal('editCharacterModal');
+                    loadCharacters();
+                } else {
+                    const result = await response.json();
+                    showMessage('editCharacterMessage', result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除角色失败:', error);
+                showMessage('editCharacterMessage', '删除失败', 'error');
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            const loading = document.getElementById('usersLoading');
+            const tbody = document.getElementById('usersTableBody');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/admin/users');
+                if (response.ok) {
+                    const data = await response.json();
+                    const users = data.users || [];
+                    
+                    tbody.innerHTML = '';
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email || '-'}</td>
+                            <td><span class="role-badge role-${user.role}">${user.role === 'admin' ? '管理员' : '普通用户'}</span></td>
+                            <td><span class="status-badge status-${user.is_active ? 'active' : 'inactive'}">${user.is_active ? '启用' : '禁用'}</span></td>
+                            <td>${user.access_count || 0}</td>
+                            <td>${user.model_calls || 0}</td>
+                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="editUser(${user.id})">编辑</button>
+                                <button class="btn btn-warning" onclick="resetPassword(${user.id})">重置密码</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 加载模型配置
+        async function loadModelConfigs() {
+            const loading = document.getElementById('modelsLoading');
+            const tbody = document.getElementById('modelsTableBody');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/admin/model-config');
+                if (response.ok) {
+                    const data = await response.json();
+                    const configs = data.configs || [];
+                    
+                    tbody.innerHTML = '';
+                    configs.forEach(config => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${config.id}</td>
+                            <td>${config.name}</td>
+                            <td>${config.llm_model}</td>
+                            <td>${config.security_model}</td>
+                            <td>${config.image_model}</td>
+                            <td><span class="status-badge status-${config.is_default ? 'active' : 'inactive'}">${config.is_default ? '是' : '否'}</span></td>
+                            <td>
+                                <button class="btn btn-primary" onclick="editModelConfig(${config.id})">编辑</button>
+                                ${!config.is_default ? `<button class="btn btn-success" onclick="setDefaultConfig(${config.id})">设为默认</button>` : ''}
+                                ${!config.is_default ? `<button class="btn btn-danger" onclick="deleteModelConfig(${config.id})">删除</button>` : ''}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加载模型配置失败:', error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 编辑用户
+        function editUser(userId) {
+            // 获取用户信息并填充表单
+            fetch(`/api/admin/users`)
+                .then(response => response.json())
+                .then(data => {
+                    const user = data.users.find(u => u.id === userId);
+                    if (user) {
+                        document.getElementById('editUserId').value = user.id;
+                        document.getElementById('editUserEmail').value = user.email || '';
+                        document.getElementById('editUserRole').value = user.role;
+                        document.getElementById('editUserActive').value = user.is_active ? '1' : '0';
+                        document.getElementById('editUserModal').style.display = 'block';
+                    }
+                });
+        }
+
+        // 重置密码
+        function resetPassword(userId) {
+            document.getElementById('resetUserId').value = userId;
+            document.getElementById('resetPasswordModal').style.display = 'block';
+        }
+
+        // 显示添加模型配置模态框
+        function showAddModelModal() {
+            document.getElementById('addModelModal').style.display = 'block';
+        }
+
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // 设置默认配置
+        async function setDefaultConfig(configId) {
+            try {
+                const response = await fetch('/api/admin/model-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        set_default: configId
+                    })
+                });
+                
+                if (response.ok) {
+                    loadModelConfigs();
+                }
+            } catch (error) {
+                console.error('设置默认配置失败:', error);
+            }
+        }
+
+        // 编辑模型配置
+        function editModelConfig(configId) {
+            // 获取配置信息并填充表单
+            fetch('/api/admin/model-config')
+                .then(response => response.json())
+                .then(data => {
+                    const config = data.configs.find(c => c.id === configId);
+                    if (config) {
+                        document.getElementById('editConfigId').value = config.id;
+                        document.getElementById('editConfigName').value = config.name;
+                        document.getElementById('editLlmModel').value = config.llm_model;
+                        document.getElementById('editSecurityModel').value = config.security_model;
+                        document.getElementById('editImageModel').value = config.image_model;
+                        document.getElementById('editIsDefault').checked = config.is_default;
+                        document.getElementById('editModelModal').style.display = 'block';
+                    }
+                });
+        }
+
+        // 删除模型配置
+        async function deleteModelConfig(configId) {
+            if (!confirm('确定要删除这个模型配置吗？此操作不可撤销。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/model-config/${configId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadModelConfigs();
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除配置失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 编辑用户表单提交
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('editUserId').value;
+            const email = document.getElementById('editUserEmail').value;
+            const role = document.getElementById('editUserRole').value;
+            const isActive = document.getElementById('editUserActive').value === '1';
+            const messageDiv = document.getElementById('editUserMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        role: role,
+                        is_active: isActive
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '用户信息更新成功';
+                    messageDiv.style.display = 'block';
+                    loadUsers();
+                    setTimeout(() => closeModal('editUserModal'), 1500);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '更新失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // 重置密码表单提交
+        document.getElementById('resetPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('resetUserId').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const messageDiv = document.getElementById('resetPasswordMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '密码重置成功';
+                    messageDiv.style.display = 'block';
+                    setTimeout(() => closeModal('resetPasswordModal'), 1500);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '重置失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // 添加模型配置表单提交
+        document.getElementById('addModelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('configName').value;
+            const llmModel = document.getElementById('llmModel').value;
+            const securityModel = document.getElementById('securityModel').value;
+            const imageModel = document.getElementById('imageModel').value;
+            const isDefault = document.getElementById('isDefault').checked;
+            const messageDiv = document.getElementById('addModelMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/admin/model-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        llm_model: llmModel,
+                        security_model: securityModel,
+                        image_model: imageModel,
+                        is_default: isDefault
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '配置添加成功';
+                    messageDiv.style.display = 'block';
+                    loadModelConfigs();
+                    setTimeout(() => closeModal('addModelModal'), 1500);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '添加失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // 编辑角色表单提交
+        document.getElementById('editCharacterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const characterId = document.getElementById('editCharacterId').value;
+            const name = document.getElementById('editCharacterName').value;
+            const personality = document.getElementById('editCharacterPersonality').value;
+            const description = document.getElementById('editCharacterDescription').value;
+            const systemPrompt = document.getElementById('editCharacterSystemPrompt').value;
+            const avatarType = document.getElementById('editAvatarType').value;
+            const avatarValue = document.getElementById('editAvatarValue').value;
+            const messageDiv = document.getElementById('editCharacterMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            if (!name || !personality || !description || !systemPrompt) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '请填写所有必填字段';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/characters/${characterId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        personality: personality,
+                        description: description,
+                        system_prompt: systemPrompt,
+                        avatar_type: avatarType,
+                        avatar_value: avatarValue
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '角色更新成功';
+                    messageDiv.style.display = 'block';
+                    loadCharacters();
+                    setTimeout(() => closeModal('editCharacterModal'), 1500);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '更新失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // 编辑模型配置表单提交
+        document.getElementById('editModelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const configId = document.getElementById('editConfigId').value;
+            const name = document.getElementById('editConfigName').value;
+            const llmModel = document.getElementById('editLlmModel').value;
+            const securityModel = document.getElementById('editSecurityModel').value;
+            const imageModel = document.getElementById('editImageModel').value;
+            const isDefault = document.getElementById('editIsDefault').checked;
+            const messageDiv = document.getElementById('editModelMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/admin/model-config/${configId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        llm_model: llmModel,
+                        security_model: securityModel,
+                        image_model: imageModel,
+                        is_default: isDefault
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = '配置修改成功';
+                    messageDiv.style.display = 'block';
+                    loadModelConfigs();
+                    setTimeout(() => closeModal('editModelModal'), 1500);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '修改失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // API配置相关函数
+        function toggleApiKeyVisibility() {
+            const apiKeyInput = document.getElementById('adminApiKey');
+            const toggleBtn = event.target;
+            
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                toggleBtn.textContent = '隐藏';
+            } else {
+                apiKeyInput.type = 'password';
+                toggleBtn.textContent = '显示';
+            }
+        }
+
+        async function saveApiKey() {
+            const apiKey = document.getElementById('adminApiKey').value;
+            const messageDiv = document.getElementById('apiMessage');
+            
+            if (!apiKey.trim()) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '请输入API密钥';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/admin/api-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = 'API密钥保存成功';
+                    messageDiv.style.display = 'block';
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || '保存失败';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '网络错误，请稍后重试';
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        async function loadApiConfig() {
+            try {
+                const response = await fetch('/api/admin/api-config');
+                const data = await response.json();
+                
+                if (data.success && data.api_key) {
+                    document.getElementById('adminApiKey').value = data.api_key;
+                }
+            } catch (error) {
+                console.error('加载API配置失败:', error);
+            }
+        }
+
+        // 显示消息
+        function showMessage(elementId, message, type) {
+            const messageDiv = document.getElementById(elementId);
+            if (messageDiv) {
+                messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+                messageDiv.textContent = message;
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        // 头像相关函数
+        const commonEmojis = [
+            '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+            '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+            '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+            '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+            '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+            '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+            '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯',
+            '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐',
+            '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈',
+            '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾',
+            '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿',
+            '😾', '👶', '👧', '🧒', '👦', '👩', '🧑', '👨', '👵', '🧓',
+            '👴', '👲', '👳', '👮', '👷', '💂', '🕵️', '👩‍⚕️', '👨‍⚕️', '👩‍🌾'
+        ];
+        
+        function showEditEmojiSelector() {
+            const emojiGrid = document.getElementById('editEmojiGrid');
+            emojiGrid.innerHTML = '';
+            
+            commonEmojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.style.cssText = 'width: 40px; height: 40px; font-size: 24px; border: none; background: none; cursor: pointer; border-radius: 4px; transition: background-color 0.2s;';
+                button.textContent = emoji;
+                button.onmouseover = () => button.style.backgroundColor = '#f3f4f6';
+                button.onmouseout = () => button.style.backgroundColor = 'transparent';
+                button.onclick = () => selectEditEmoji(emoji);
+                emojiGrid.appendChild(button);
+            });
+            
+            document.getElementById('editEmojiModal').style.display = 'flex';
+        }
+        
+        function hideEditEmojiSelector() {
+            document.getElementById('editEmojiModal').style.display = 'none';
+        }
+        
+        function selectEditEmoji(emoji) {
+            document.getElementById('editAvatarType').value = 'emoji';
+            document.getElementById('editAvatarValue').value = emoji;
+            updateEditAvatarPreview();
+            hideEditEmojiSelector();
+        }
+        
+        function handleEditAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB限制
+                    alert('图片大小不能超过5MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editAvatarType').value = 'upload';
+                    document.getElementById('editAvatarValue').value = e.target.result;
+                    updateEditAvatarPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function resetEditToInitial() {
+            document.getElementById('editAvatarType').value = 'initial';
+            document.getElementById('editAvatarValue').value = '';
+            updateEditAvatarPreview();
+        }
+        
+        function updateEditAvatarPreview() {
+            const avatarType = document.getElementById('editAvatarType').value;
+            const avatarValue = document.getElementById('editAvatarValue').value;
+            const preview = document.getElementById('editAvatarPreview');
+            const characterName = document.getElementById('editCharacterName').value || 'A';
+            
+            if (avatarType === 'emoji' && avatarValue) {
+                preview.style.cssText = 'width: 64px; height: 64px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px;';
+                preview.textContent = avatarValue;
+            } else if (avatarType === 'upload' && avatarValue) {
+                preview.style.cssText = 'width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;';
+                preview.innerHTML = `<img src="${avatarValue}" alt="头像" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                // 默认使用首字母头像
+                preview.style.cssText = 'width: 64px; height: 64px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;';
+                preview.textContent = characterName.charAt(0);
+            }
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
