@@ -15,6 +15,10 @@ class Config:
     QWEN_API_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
     DEFAULT_MODEL = 'qwen-plus'
     
+    # 安全检测模型配置
+    SECURITY_MODEL = 'deepseek-v3'  # 用于提示词注入检测的轻量模型
+    SECURITY_CHECK_TIMEOUT = 5  # 安全检测超时时间（秒）
+    
     # API调用配置
     API_TIMEOUT = 60  # API调用超时时间（秒）- 增加到60秒以适应复杂对话
     MAX_TOKENS = 300  # 最大生成token数 - 减少到300以提高响应速度

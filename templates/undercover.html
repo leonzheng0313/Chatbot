@@ -429,6 +429,12 @@
                 
                 const result = await response.json();
                 
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    alert(result.message || '检测到不安全的输入内容，请重新输入');
+                    return;
+                }
+                
                 if (response.ok) {
                     gameState.sessionId = result.session_id;
                     gameState.currentRound = result.current_round;
@@ -575,6 +581,14 @@
                 
                 const result = await response.json();
                 
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    textElement.textContent = result.message || '检测到不安全的内容';
+                    textElement.className = 'text-red-500';
+                    addGameFlowMessage(`⚠️ ${gameState.selectedCharacters[characterIndex].name} 内容不安全`);
+                    throw new Error('安全警告');
+                }
+                
                 if (response.ok && result.description && result.description.trim()) {
                     textElement.textContent = result.description;
                     textElement.className = 'text-gray-800 animate-fade-in';
@@ -651,6 +665,18 @@
                 
                 const voteResult = await voteResponse.json();
                 
+                // 检查是否有安全警告
+                if (voteResult.security_warning) {
+                    addGameFlowMessage('⚠️ 检测到不安全的内容，投票终止');
+                    votingOptions.innerHTML = `
+                        <div class="text-center py-8">
+                            <h3 class="text-xl font-bold text-red-600 mb-4">⚠️ 安全警告</h3>
+                            <p class="text-gray-600">${voteResult.message || '检测到不安全的内容'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
                 if (voteResponse.ok) {
                     addGameFlowMessage('✅ AI投票完成，正在统计结果...');
                     
@@ -691,6 +717,18 @@
                     });
                     
                     const processResult = await processResponse.json();
+                    
+                    // 检查是否有安全警告
+                    if (processResult.security_warning) {
+                        addGameFlowMessage('⚠️ 检测到不安全的内容，结果处理终止');
+                        votingOptions.innerHTML = `
+                            <div class="text-center py-8">
+                                <h3 class="text-xl font-bold text-red-600 mb-4">⚠️ 安全警告</h3>
+                                <p class="text-gray-600">${processResult.message || '检测到不安全的内容'}</p>
+                            </div>
+                        `;
+                        return;
+                    }
                     
                     if (processResponse.ok) {
                         const eliminatedCharacter = gameState.selectedCharacters[processResult.eliminated_character.index];

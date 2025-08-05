@@ -448,18 +448,26 @@
                         // 移除当前角色的输入指示器
                         removeSingleTypingIndicator(characterId);
                         
+                        // 检查是否有安全警告
+                        if (result.security_warning) {
+                            showNotification(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                            // 重置到情绪输入阶段
+                            clearSanctuaryChat();
+                            return;
+                        }
+                        
                         if (result.responses && result.responses.length > 0) {
                             const characterResponse = result.responses[0];
                             
-                            // 添加一些随机延迟，模拟真实对话
-                            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-                            
+                            // 立即显示AI响应，避免空白期
                             addMessageToChat(
                                 characterResponse.character_name,
                                 characterResponse.message,
                                 'character',
                                 characterResponse.character_id
                             );
+                        } else if (result.error) {
+                            showNotification(result.error, 'error');
                         }
                     } catch (error) {
                         console.error(`角色 ${character.name} 回复失败:`, error);

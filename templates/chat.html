@@ -349,16 +349,35 @@
                 
                 const result = await response.json();
                 
-                // 移除输入指示器
-                removeTypingIndicators();
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    // 移除输入指示器
+                    removeTypingIndicators();
+                    // 显示安全警告并清除用户输入
+                    showNotification(result.message || '检测到不安全的输入内容', 'error');
+                    // 从聊天记录中移除刚添加的用户消息
+                    const chatMessages = document.getElementById('chatMessages');
+                    const lastMessage = chatMessages.lastElementChild;
+                    if (lastMessage && lastMessage.querySelector('.bg-gradient-to-r.from-blue-500')) {
+                        lastMessage.remove();
+                    }
+                    return;
+                }
                 
                 if (result.responses) {
                     // 逐个显示角色回复，增加真实感
                     for (let i = 0; i < result.responses.length; i++) {
                         const characterResponse = result.responses[i];
                         
-                        // 添加延迟，模拟真实对话节奏
-                        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+                        // 在显示第一个回复前移除typing指示器
+                        if (i === 0) {
+                            removeTypingIndicators();
+                        }
+                        
+                        // 立即显示第一个回复，后续回复添加较短延迟
+                        if (i > 0) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
                         
                         addMessageToChat(
                             characterResponse.character_name,
@@ -368,7 +387,9 @@
                         );
                     }
                 } else {
-                    showNotification('AI回复失败，请重试', 'error');
+                    // 移除输入指示器
+                    removeTypingIndicators();
+                    showNotification(result.error || 'AI回复失败，请重试', 'error');
                 }
             } catch (error) {
                 console.error('发送消息失败:', error);

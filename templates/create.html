@@ -611,6 +611,13 @@
                 });
                 
                 const result = await response.json();
+                
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showNotification(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
+                
                 if (response.ok) {
                     showNotification('角色创建成功！', 'success');
                     setTimeout(() => {
@@ -682,6 +689,13 @@
                 });
 
                 const result = await response.json();
+                
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showNotification(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
+                
                 if (response.ok) {
                     document.getElementById('aiGeneratedPrompt').textContent = result.prompt;
                     document.getElementById('aiResultContainer').classList.remove('hidden');

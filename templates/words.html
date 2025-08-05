@@ -353,6 +353,12 @@
 
                 const result = await response.json();
 
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showMessage(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
+
                 if (response.ok) {
                     showMessage('词汇对添加成功', 'success');
                     document.getElementById('publicWord').value = '';
@@ -408,6 +414,12 @@
 
                 const result = await response.json();
 
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showMessage(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
+
                 if (response.ok) {
                     showMessage(`批量添加完成：成功${result.added_count}个，跳过${result.skipped_count}个`, 'success');
                     if (result.errors.length > 0) {
@@ -451,6 +463,12 @@
                 });
 
                 const result = await response.json();
+
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showMessage(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
 
                 if (response.ok) {
                     generatedWordPairs = result.word_pairs;
@@ -512,6 +530,12 @@
                 });
 
                 const result = await response.json();
+
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showMessage(result.message || '检测到不安全的内容，无法保存', 'error');
+                    return;
+                }
 
                 if (response.ok) {
                     showMessage(`成功保存${result.added_count}对词汇到词库`, 'success');
