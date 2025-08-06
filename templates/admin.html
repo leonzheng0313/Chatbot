@@ -54,9 +54,27 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px; /* 增加容器最大宽度 */
             margin: 2rem auto;
-            padding: 0 2rem;
+            padding: 0 1rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            th:last-child, td:last-child {
+                width: 240px;
+                min-width: 240px;
+            }
+            
+            td:last-child .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+                margin-right: 0.2rem;
+            }
         }
 
         .tabs {
@@ -154,12 +172,31 @@
             width: 100%;
             border-collapse: collapse;
             background: white;
+            min-width: 1000px; /* 确保表格有足够的最小宽度 */
         }
 
         th, td {
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid #e1e5e9;
+            white-space: nowrap; /* 防止文字换行 */
+        }
+
+        /* 操作列特殊样式 */
+        th:last-child, td:last-child {
+            width: 280px; /* 固定操作列宽度 */
+            min-width: 280px;
+            white-space: nowrap;
+        }
+
+        /* 用户名列 */
+        th:nth-child(2), td:nth-child(2) {
+            min-width: 120px;
+        }
+
+        /* 邮箱列 */
+        th:nth-child(3), td:nth-child(3) {
+            min-width: 180px;
         }
 
         th {
@@ -173,14 +210,24 @@
         }
 
         .btn {
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            margin-right: 0.5rem;
+            margin-right: 0.3rem;
+            margin-bottom: 0.2rem;
             transition: all 0.3s ease;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        /* 操作列中的按钮组 */
+        td:last-child .btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            margin-right: 0.25rem;
         }
 
         .btn-primary {
@@ -917,6 +964,7 @@
                             <td>
                                 <button class="btn btn-primary" onclick="editUser(${user.id})">编辑</button>
                                 <button class="btn btn-warning" onclick="resetPassword(${user.id})">重置密码</button>
+                                ${user.role !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">删除</button>` : ''}
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -989,6 +1037,47 @@
         function resetPassword(userId) {
             document.getElementById('resetUserId').value = userId;
             document.getElementById('resetPasswordModal').style.display = 'block';
+        }
+
+        // 删除用户函数
+        function deleteUser(userId, username) {
+            // 第一次确认
+            if (!confirm(`确定要删除用户 "${username}" 吗？\n\n此操作将会：\n- 删除该用户的所有聊天记录\n- 删除该用户创建的所有角色\n- 永久删除该用户账户\n\n此操作不可撤销！`)) {
+                return;
+            }
+            
+            // 第二次确认
+            const confirmText = prompt(`请输入用户名 "${username}" 来确认删除操作：`);
+            if (confirmText !== username) {
+                if (confirmText !== null) { // 用户没有取消
+                    alert('用户名不匹配，删除操作已取消。');
+                }
+                return;
+            }
+            
+            // 执行删除
+            performDeleteUser(userId, username);
+        }
+        
+        // 执行删除用户操作
+        async function performDeleteUser(userId, username) {
+            try {
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`用户 "${username}" 删除成功！`);
+                    loadUsers(); // 重新加载用户列表
+                } else {
+                    alert(`删除失败：${data.error}`);
+                }
+            } catch (error) {
+                console.error('删除用户失败:', error);
+                alert('删除失败，请重试');
+            }
         }
 
         // 显示添加模型配置模态框

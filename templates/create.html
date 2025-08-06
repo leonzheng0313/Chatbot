@@ -165,8 +165,9 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">AI生成的系统提示词</label>
                         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-3">
                             <div id="aiGeneratedPrompt" class="text-gray-800 whitespace-pre-wrap"></div>
+                            <textarea id="aiEditPrompt" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent hidden"></textarea>
                         </div>
-                        <div class="flex space-x-3">
+                        <div class="flex space-x-3" id="aiActionButtons">
                             <button type="button" onclick="acceptAIResult()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition">
                                 ✅ 确认使用
                             </button>
@@ -177,13 +178,7 @@
                                 🔄 重新生成
                             </button>
                         </div>
-                    </div>
-
-                    <!-- 手动编辑区域 -->
-                    <div id="aiEditContainer" class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">编辑系统提示词</label>
-                        <textarea id="aiEditPrompt" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
-                        <div class="flex space-x-3 mt-3">
+                        <div class="flex space-x-3 hidden" id="aiEditButtons">
                             <button type="button" onclick="saveAIEdit()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition">
                                 💾 保存修改
                             </button>
@@ -714,17 +709,22 @@
 
         function acceptAIPrompt() {
             const generatedPrompt = document.getElementById('aiGeneratedPrompt').textContent;
-            document.getElementById('aiEditPrompt').value = generatedPrompt;
-            document.getElementById('aiEditContainer').classList.remove('hidden');
-            showNotification('已接受AI生成的提示词，可以进行编辑', 'success');
+            // 直接确认使用，不再显示编辑框
+            showNotification('已确认使用AI生成的提示词', 'success');
         }
 
         function editAIPrompt() {
-            document.getElementById('aiEditContainer').classList.remove('hidden');
+            // 隐藏显示区域，显示编辑区域
+            document.getElementById('aiGeneratedPrompt').classList.add('hidden');
+            document.getElementById('aiEditPrompt').classList.remove('hidden');
+            
+            // 将生成的内容复制到编辑框
             const generatedPrompt = document.getElementById('aiGeneratedPrompt').textContent;
-            if (generatedPrompt && !document.getElementById('aiEditPrompt').value.trim()) {
-                document.getElementById('aiEditPrompt').value = generatedPrompt;
-            }
+            document.getElementById('aiEditPrompt').value = generatedPrompt;
+            
+            // 切换按钮组
+            document.getElementById('aiActionButtons').classList.add('hidden');
+            document.getElementById('aiEditButtons').classList.remove('hidden');
         }
 
         async function regenerateAIPrompt() {
@@ -734,7 +734,13 @@
                 return;
             }
 
-            const regenerateBtn = document.querySelector('#aiResultContainer button:last-child');
+            // 更精确地选择重新生成按钮
+            const regenerateBtn = document.querySelector('button[onclick="regenerateAI()"]');
+            if (!regenerateBtn) {
+                console.error('找不到重新生成按钮');
+                return;
+            }
+            
             const originalText = regenerateBtn.textContent;
             regenerateBtn.disabled = true;
             regenerateBtn.textContent = '重新生成中...';
@@ -751,18 +757,50 @@
                 });
 
                 const result = await response.json();
+                console.log('重新生成API响应:', result); // 调试信息
+                
+                // 检查是否有安全警告
+                if (result.security_warning) {
+                    showNotification(result.message || '检测到不安全的输入内容，请重新输入', 'error');
+                    return;
+                }
+                
                 if (response.ok) {
-                    document.getElementById('aiGeneratedPrompt').textContent = result.prompt;
-                    showNotification('AI提示词重新生成成功！', 'success');
+                    // 检查返回的prompt是否存在且不为空
+                    if (result.prompt && result.prompt.trim()) {
+                        // 强制更新生成的提示词内容
+                        const promptElement = document.getElementById('aiGeneratedPrompt');
+                        promptElement.textContent = result.prompt;
+                        console.log('更新内容为:', result.prompt); // 调试信息
+                        
+                        // 确保切换到显示状态
+                        document.getElementById('aiEditPrompt').classList.add('hidden');
+                        document.getElementById('aiGeneratedPrompt').classList.remove('hidden');
+                        document.getElementById('aiEditButtons').classList.add('hidden');
+                        document.getElementById('aiActionButtons').classList.remove('hidden');
+                        
+                        // 强制重新渲染
+                        promptElement.style.display = 'none';
+                        promptElement.offsetHeight; // 触发重排
+                        promptElement.style.display = '';
+                        
+                        showNotification('AI提示词重新生成成功！', 'success');
+                    } else {
+                        console.error('API返回的prompt为空:', result);
+                        showNotification('生成的提示词为空，请重试', 'error');
+                    }
                 } else {
+                    console.error('API调用失败:', result);
                     showNotification(result.error || 'AI重新生成失败', 'error');
                 }
             } catch (error) {
                 console.error('AI重新生成失败:', error);
                 showNotification('AI重新生成失败，请重试', 'error');
             } finally {
-                regenerateBtn.disabled = false;
-                regenerateBtn.textContent = originalText;
+                if (regenerateBtn) {
+                    regenerateBtn.disabled = false;
+                    regenerateBtn.textContent = originalText;
+                }
             }
         }
 
@@ -771,7 +809,14 @@
             document.getElementById('aiGeneratedPrompt').textContent = '';
             document.getElementById('aiEditPrompt').value = '';
             document.getElementById('aiResultContainer').classList.add('hidden');
-            document.getElementById('aiEditContainer').classList.add('hidden');
+            
+            // 重置显示状态
+            document.getElementById('aiEditPrompt').classList.add('hidden');
+            document.getElementById('aiGeneratedPrompt').classList.remove('hidden');
+            
+            // 重置按钮组
+            document.getElementById('aiEditButtons').classList.add('hidden');
+            document.getElementById('aiActionButtons').classList.remove('hidden');
         }
 
         function saveAIEdit() {
@@ -780,12 +825,29 @@
                 showNotification('编辑内容不能为空', 'error');
                 return;
             }
-            document.getElementById('aiEditContainer').classList.add('hidden');
-            showNotification('提示词编辑完成，可以创建角色了', 'success');
+            
+            // 更新显示内容为编辑后的内容
+            document.getElementById('aiGeneratedPrompt').textContent = editedPrompt;
+            
+            // 切换回显示状态
+            document.getElementById('aiEditPrompt').classList.add('hidden');
+            document.getElementById('aiGeneratedPrompt').classList.remove('hidden');
+            
+            // 切换按钮组
+            document.getElementById('aiEditButtons').classList.add('hidden');
+            document.getElementById('aiActionButtons').classList.remove('hidden');
+            
+            showNotification('提示词编辑完成', 'success');
         }
 
         function cancelAIEdit() {
-            document.getElementById('aiEditContainer').classList.add('hidden');
+            // 切换回显示状态，不保存编辑内容
+            document.getElementById('aiEditPrompt').classList.add('hidden');
+            document.getElementById('aiGeneratedPrompt').classList.remove('hidden');
+            
+            // 切换按钮组
+            document.getElementById('aiEditButtons').classList.add('hidden');
+            document.getElementById('aiActionButtons').classList.remove('hidden');
         }
 
         // AI模式按钮函数别名

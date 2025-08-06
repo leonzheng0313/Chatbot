@@ -190,7 +190,7 @@
             <div class="form-group">
                 <label for="username">用户名 *</label>
                 <input type="text" id="username" name="username" required>
-                <div class="form-help">用户名长度为3-20个字符</div>
+                <div class="form-help">用户名必须是字母+数字的形式，长度为3-20个字符</div>
             </div>
 
             <div class="form-group">
@@ -202,7 +202,7 @@
             <div class="form-group">
                 <label for="password">密码 *</label>
                 <input type="password" id="password" name="password" required>
-                <div class="form-help">密码长度至少6个字符</div>
+                <div class="form-help">密码长度至少6个字符，必须包含至少两种类型：大写字母、小写字母、数字、特殊符号</div>
             </div>
 
             <div class="form-group">
@@ -213,7 +213,10 @@
 
             <div class="form-group">
                 <label for="apiKey">阿里云百炼API密钥 *</label>
-                <textarea id="apiKey" name="apiKey" placeholder="请输入您的阿里云百炼API密钥" required></textarea>
+                <div style="position: relative;">
+                    <textarea id="apiKey" name="apiKey" placeholder="请输入您的阿里云百炼API密钥" required style="padding-right: 50px; -webkit-text-security: disc; text-security: disc;"></textarea>
+                    <button type="button" id="toggleApiKey" style="position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; color: #667eea; font-size: 14px;">显示</button>
+                </div>
                 <div class="form-help">注册后可在个人资料中修改</div>
             </div>
 
@@ -260,8 +263,45 @@
                 return;
             }
             
+            // 验证密码复杂度（至少包含两种类型）
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /[0-9]/.test(password);
+            const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+            
+            const typeCount = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
+            
+            if (typeCount < 2) {
+                errorDiv.textContent = '密码必须包含至少两种类型：大写字母、小写字母、数字、特殊符号';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // 检查密码不能是纯数字
+            if (/^[0-9]+$/.test(password)) {
+                errorDiv.textContent = '密码不能是纯数字';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // 验证用户名格式（字母+数字）
             if (username.length < 3 || username.length > 20) {
                 errorDiv.textContent = '用户名长度为3-20个字符';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const usernameRegex = /^[a-zA-Z0-9]+$/;
+            if (!usernameRegex.test(username)) {
+                errorDiv.textContent = '用户名必须是字母+数字的形式';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const hasLetter = /[a-zA-Z]/.test(username);
+            const hasNumber = /[0-9]/.test(username);
+            if (!hasLetter || !hasNumber) {
+                errorDiv.textContent = '用户名必须同时包含字母和数字';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -309,6 +349,26 @@
                 loading.style.display = 'none';
             }
         });
+        
+        // API密钥显示/隐藏功能
+        document.getElementById('toggleApiKey').addEventListener('click', function() {
+            const apiKeyField = document.getElementById('apiKey');
+            const toggleBtn = document.getElementById('toggleApiKey');
+            
+            if (apiKeyField.style.webkitTextSecurity === 'disc' || apiKeyField.style.webkitTextSecurity === '') {
+                // 当前是隐藏状态，切换为显示
+                apiKeyField.style.webkitTextSecurity = 'none';
+                apiKeyField.style.textSecurity = 'none';
+                toggleBtn.textContent = '隐藏';
+            } else {
+                // 当前是显示状态，切换为隐藏
+                apiKeyField.style.webkitTextSecurity = 'disc';
+                apiKeyField.style.textSecurity = 'disc';
+                toggleBtn.textContent = '显示';
+            }
+        });
+        
+
     </script>
 </body>
 </html>

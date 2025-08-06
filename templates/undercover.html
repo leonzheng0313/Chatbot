@@ -218,7 +218,7 @@
     <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-            <p class="text-gray-700">正在生成AI描述...</p>
+            <p class="text-gray-700">AI角色思考中...</p>
         </div>
     </div>
 
@@ -494,7 +494,7 @@
                         ${isEliminated ? '<span class="text-red-500 font-bold">已淘汰</span>' : ''}
                     </div>
                     <div class="bg-gray-50 rounded-lg p-3">
-                        <p class="text-gray-600" id="desc-text-${index}">等待生成描述...</p>
+                        <p class="text-gray-600" id="desc-text-${index}">等待上一位发言...</p>
                     </div>
                 `;
                 
@@ -504,6 +504,17 @@
 
         // 生成所有角色描述
         async function generateAllDescriptions() {
+            // 自动滚动到角色发言区域
+            setTimeout(() => {
+                const characterDescriptionsElement = document.getElementById('characterDescriptions');
+                if (characterDescriptionsElement) {
+                    characterDescriptionsElement.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+            }, 100);
+            
             // 添加流式提示
             addGameFlowMessage(`🎭 第 ${gameState.currentRound} 轮开始，角色们正在思考描述...`);
             
@@ -527,7 +538,7 @@
                     }
                     
                     // 添加延迟避免API调用过快，并让用户看到流程
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
             
@@ -537,7 +548,7 @@
                 // 延迟显示投票区域，让用户有时间阅读描述
                 setTimeout(() => {
                     showVotingArea();
-                }, 2000);
+                }, 1500);
             } else {
                 addGameFlowMessage(`❌ 所有角色描述生成失败，请检查网络连接或API配置`);
                 alert('所有角色描述生成失败，请重试');
@@ -554,7 +565,7 @@
             // 显示生成中的动画
             textElement.innerHTML = `
                 <div class="flex items-center space-x-2">
-                    <span>正在生成描述${retryCount > 0 ? ` (重试${retryCount})` : ''}</span>
+                    <span>思考中${retryCount > 0 ? ` (重试${retryCount})` : ''}</span>
                     <div class="flex space-x-1">
                         <div class="w-2 h-2 bg-blue-400 rounded-full animate-typing"></div>
                         <div class="w-2 h-2 bg-blue-400 rounded-full animate-typing" style="animation-delay: 0.2s"></div>
@@ -625,6 +636,16 @@
             `;
             
             votingArea.classList.remove('hidden');
+            
+            // 自动滚动到投票区域
+            setTimeout(() => {
+                if (votingArea) {
+                    votingArea.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+            }, 200);
         }
 
         // 开始AI投票
@@ -825,28 +846,18 @@
         async function showVotingResult(result) {
             const votingOptions = document.getElementById('votingOptions');
             
-            // 构建投票统计详情
-            let voteDetailsHtml = '';
-            if (result.vote_details && result.vote_details.length > 0) {
-                voteDetailsHtml = `
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h5 class="font-bold text-gray-700 mb-3">投票详情：</h5>
-                        <div class="space-y-2 text-sm">
-                            ${result.vote_details.map(vote => 
-                                `<div class="flex justify-between items-center">
-                                    <span>${vote.voter} → ${vote.voted_for}</span>
-                                    <span class="text-gray-500">${vote.reason.split('理由：')[1] || vote.reason}</span>
-                                </div>`
-                            ).join('')}
-                        </div>
-                    </div>
-                `;
-            }
+            // 检查是否已经有投票发言显示
+            const existingVoteMessages = document.getElementById('voteMessages');
             
-            votingOptions.innerHTML = `
-                <div class="py-6">
+            if (existingVoteMessages && existingVoteMessages.children.length > 0) {
+                // 如果已经有投票发言内容，在其下方添加结果统计
+                const parentContainer = existingVoteMessages.parentNode;
+                
+                // 添加分隔线和结果标题
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'mt-8 pt-6 border-t border-gray-200';
+                resultDiv.innerHTML = `
                     <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">📊 投票结果统计</h3>
-                    ${voteDetailsHtml}
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
                         <div class="text-center">
                             <h4 class="text-lg font-bold text-red-600 mb-2">被淘汰角色</h4>
@@ -872,17 +883,95 @@
                     </div>
                     <div class="text-center">
                         ${result.game_over ? 
-                            `<div class="text-lg font-bold ${result.winner === 'undercover' ? 'text-red-600' : 'text-green-600'}">
+                            `<div class="text-lg font-bold ${result.winner === 'undercover' ? 'text-red-600' : 'text-green-600'} mb-4">
                                 ${result.winner === 'undercover' ? '🎭 卧底获胜！' : '🕵️ 平民获胜！'}
-                            </div>` : 
+                            </div>
+                            <button onclick="resetGame()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition">
+                                🏠 返回谁是卧底
+                            </button>` : 
                             `<div class="text-gray-600 mb-4">游戏继续，进入第 ${result.current_round} 轮</div>
                             <button onclick="generateAllDescriptions()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition">
                                 🎭 开始第 ${result.current_round} 轮发言
                             </button>`
                         }
                     </div>
-                </div>
-            `;
+                `;
+                
+                parentContainer.appendChild(resultDiv);
+            } else {
+                // 如果没有投票发言显示，创建完整的结果页面（包含投票详情）
+                let voteDetailsHtml = '';
+                if (result.vote_details && result.vote_details.length > 0) {
+                    voteDetailsHtml = `
+                        <div class="mb-6">
+                            <h5 class="font-bold text-gray-700 mb-4 text-center">投票详情：</h5>
+                            <div class="space-y-4">
+                                ${result.vote_details.map(vote => {
+                                    const voterCharacter = gameState.selectedCharacters.find(char => char.name === vote.voter);
+                                    return `
+                                    <div class="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
+                                        <div class="flex-shrink-0">
+                                            ${voterCharacter ? generateAvatarHtml(voterCharacter, 'w-10 h-10 text-sm') : '<div class="w-10 h-10 bg-gray-300 rounded-full"></div>'}
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <span class="font-semibold text-gray-800">${vote.voter}</span>
+                                                <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">投票给: ${vote.voted_for}</span>
+                                            </div>
+                                            <div class="text-gray-700">${vote.reason}</div>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                votingOptions.innerHTML = `
+                    <div class="py-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">📊 投票结果统计</h3>
+                        ${voteDetailsHtml}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                            <div class="text-center">
+                                <h4 class="text-lg font-bold text-red-600 mb-2">被淘汰角色</h4>
+                                <div class="flex justify-center items-center space-x-3 mb-4">
+                                    ${generateAvatarHtml(gameState.selectedCharacters[result.eliminated_character.index], 'w-16 h-16 text-xl')}
+                                    <div>
+                                        <p class="font-bold text-xl">${result.eliminated_character.name}</p>
+                                        <p class="text-gray-600">${result.eliminated_character.is_undercover ? '卧底身份' : '平民身份'}</p>
+                                    </div>
+                                </div>
+                                ${result.eliminated_character.elimination_speech ? `
+                                <div class="bg-white border-l-4 ${result.eliminated_character.is_undercover ? 'border-red-500' : 'border-blue-500'} rounded-lg p-4 mt-4">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="text-2xl">${result.eliminated_character.is_undercover ? '😤' : '😡'}</div>
+                                        <div class="flex-1">
+                                            <p class="text-sm text-gray-500 mb-1">${result.eliminated_character.name}的最后话语：</p>
+                                            <p class="text-gray-800 font-medium italic">"${result.eliminated_character.elimination_speech}"</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="text-center">
+                             ${result.game_over ? 
+                                 `<div class="text-lg font-bold ${result.winner === 'undercover' ? 'text-red-600' : 'text-green-600'} mb-4">
+                                     ${result.winner === 'undercover' ? '🎭 卧底获胜！' : '🕵️ 平民获胜！'}
+                                 </div>
+                                 <button onclick="resetGame()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition">
+                                     🏠 返回谁是卧底
+                                 </button>` : 
+                                 `<div class="text-gray-600 mb-4">游戏继续，进入第 ${result.current_round} 轮</div>
+                                 <button onclick="generateAllDescriptions()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition">
+                                     🎭 开始第 ${result.current_round} 轮发言
+                                 </button>`
+                             }
+                         </div>
+                    </div>
+                `;
+            }
         }
         
         // 打字机效果函数

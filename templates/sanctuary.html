@@ -168,7 +168,7 @@
                         💭 虚拟朋友们准备为你生成一幅画...
                     </div>
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <button onclick="clearSanctuaryChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition">
+                        <button id="restartButton" onclick="clearSanctuaryChat()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition hidden">
                             重新开始
                         </button>
                     </div>
@@ -303,7 +303,7 @@
             const rounds = Math.max(2, 7 - characterCount);
             return rounds;
         }
-        let savedImages = JSON.parse(localStorage.getItem('sanctuaryImages') || '[]');
+        let savedImages = []; // 将从服务器加载
 
         // 生成会话ID
         function generateSessionId() {
@@ -314,7 +314,25 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCharacters();
             loadSelectedCharacters();
+            loadSanctuaryGallery();
         });
+        
+        // 从服务器加载心情图册
+        async function loadSanctuaryGallery() {
+            try {
+                const response = await fetch('/api/sanctuary/gallery');
+                if (response.ok) {
+                    const data = await response.json();
+                    savedImages = data.images || [];
+                } else {
+                    console.error('加载心情图册失败:', response.status);
+                    savedImages = [];
+                }
+            } catch (error) {
+                console.error('加载心情图册出错:', error);
+                savedImages = [];
+            }
+        }
 
         // 设置示例文本
         function setExampleText(text) {
@@ -583,6 +601,9 @@
             // 更新状态文字
             document.getElementById('statusText').textContent = '🎨 虚拟朋友们已经为你做了一幅画';
             
+            // 显示重新开始按钮
+            document.getElementById('restartButton').classList.remove('hidden');
+            
             // 设置协作文本
             const characterNames = selectedCharacterIds.map(id => {
                 const character = allCharacters.find(c => c.id === id);
@@ -624,20 +645,13 @@
             window.currentGeneratedImage = result;
         }
 
-        // 保存到图册
+        // 保存到图册（图像已在生成时自动保存到数据库）
         function saveToGallery() {
             if (window.currentGeneratedImage) {
-                const imageData = {
-                    ...window.currentGeneratedImage,
-                    original_emotion: currentEmotion,
-                    created_at: new Date().toISOString(),
-                    id: Date.now()
-                };
-                
-                savedImages.unshift(imageData);
-                localStorage.setItem('sanctuaryImages', JSON.stringify(savedImages));
-                
-                showNotification('已保存到心情图册', 'success');
+                // 重新加载图册以显示最新保存的图像
+                loadSanctuaryGallery().then(() => {
+                    showNotification('已保存到心情图册', 'success');
+                });
             }
         }
 
@@ -798,6 +812,9 @@
                     <button onclick="generateMemoryCardFromImage('${image.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium">
                         📄 生成纪念卡片
                     </button>
+                    <button onclick="deleteImageFromGallery(${image.id})" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        🗑️ 删除这幅画
+                    </button>
                     <button onclick="hideImageDetail()" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition text-sm">
                         关闭
                     </button>
@@ -816,6 +833,39 @@
         function hideImageDetail() {
             document.getElementById('imageDetailModal').classList.add('hidden');
             document.getElementById('imageDetailModal').classList.remove('flex');
+        }
+        
+        // 从图册删除图像
+        async function deleteImageFromGallery(imageId) {
+            if (!confirm('确定要删除这幅心情画作吗？删除后无法恢复。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/sanctuary/gallery/${imageId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showNotification('画作已删除', 'success');
+                    hideImageDetail();
+                    // 重新加载图册
+                    await loadSanctuaryGallery();
+                    showMyGallery();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除图像出错:', error);
+                showNotification('删除失败，请重试', 'error');
+            }
+        }
+        
+        // 返回图册
+        function backToGallery() {
+            hideImageDetail();
+            showMyGallery();
         }
 
         // 返回心情图册
@@ -894,6 +944,11 @@
             currentEmotion = '';
             sessionId = generateSessionId();
             
+            // 清空已选择的虚拟朋友，强制重新选择
+            selectedCharacterIds = [];
+            sessionStorage.removeItem('sanctuarySelectedCharacters');
+            updateSelectedCharactersDisplay();
+            
             document.getElementById('chatSection').classList.add('hidden');
             document.getElementById('emotionInputSection').classList.remove('hidden');
             document.getElementById('emotionInput').value = '';
@@ -901,11 +956,20 @@
                 <div id="chatWelcomeMessage" class="text-center text-gray-500 text-sm py-8">
                     <div class="mb-4">
                         <div class="text-lg mb-2">🌸 心灵对话即将开始</div>
-                        <div class="text-gray-400 mb-4">虚拟朋友们会自动为你深入探讨话题，无需额外输入~</div>
+                        <div class="text-gray-400 mb-4">选择虚拟朋友后，他们会陪伴你一起探索内心~</div>
                     </div>
                 </div>
             `;
             document.getElementById('generateImageBtn').classList.add('hidden');
+            
+            // 隐藏重新开始按钮
+            document.getElementById('restartButton').classList.add('hidden');
+            
+            // 重置状态文字
+            document.getElementById('statusText').textContent = '💭 虚拟朋友们准备为你生成一幅画...';
+            
+            // 关闭图像模态框
+            closeImageModal();
         }
 
         // 聊天输入功能已移除，改为完全自动的虚拟朋友讨论模式

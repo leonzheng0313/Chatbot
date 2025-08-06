@@ -12,9 +12,28 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import config, Config
 
-# 简单的内存缓存
+# 分层缓存策略
 api_cache = {}
-CACHE_DURATION = 300  # 5分钟缓存
+security_cache = {}
+
+# 不同类型请求的缓存时间配置（秒）
+CACHE_DURATIONS = {
+    'character_generation': 1800,    # 角色生成：30分钟
+    'chat_response': 900,           # 聊天回复：15分钟
+    'game_content': 1800,           # 游戏内容：30分钟
+    'security_check': 7200,         # 安全检测：2小时
+    'system_prompt': 3600,          # 系统提示：1小时
+    'default': 900                  # 默认：15分钟
+}
+
+# 缓存大小限制
+CACHE_LIMITS = {
+    'api_cache': 500,              # API缓存：500条
+    'security_cache': 1000,        # 安全缓存：1000条
+}
+
+# 向后兼容的缓存时间
+CACHE_DURATION = CACHE_DURATIONS['default']  # 默认15分钟缓存
 
 # 创建统一的JSON响应函数
 def json_response(data, status_code=200):
@@ -498,6 +517,7 @@ def generate_elimination_speech(character, is_undercover, game_context, retries=
 4. 长度控制在30-80字之间
 5. 不要透露真实身份信息
 6. 要有强烈的情绪色彩
+7. **重要对话规则**：禁止使用叙述性描述（如"我点点头"、"我看着"等）
 
 直接输出角色的话语，不要加任何前缀或解释。
 """
@@ -553,8 +573,39 @@ def generate_elimination_speech(character, is_undercover, game_context, retries=
         else:
             return f"我{character['name']}是无辜的！你们都搞错了！"
 
+def get_cache_type_and_duration(messages, context_hint=None):
+    """根据消息内容和上下文提示确定缓存类型和时间"""
+    if context_hint:
+        # 如果有明确的上下文提示，直接使用
+        return context_hint, CACHE_DURATIONS.get(context_hint, CACHE_DURATIONS['default'])
+    
+    # 分析消息内容确定缓存类型
+    message_text = ' '.join([msg.get('content', '') for msg in messages if isinstance(msg, dict)])
+    message_lower = message_text.lower()
+    
+    # 角色生成相关
+    if any(keyword in message_lower for keyword in ['角色', '人物', '性格', '描述', 'character', 'personality']):
+        return 'character_generation', CACHE_DURATIONS['character_generation']
+    
+    # 游戏内容相关
+    if any(keyword in message_lower for keyword in ['游戏', '卧底', '投票', 'game', 'undercover', 'vote']):
+        return 'game_content', CACHE_DURATIONS['game_content']
+    
+    # 系统提示相关
+    if any(keyword in message_lower for keyword in ['系统', 'system', '规则', 'rule']):
+        return 'system_prompt', CACHE_DURATIONS['system_prompt']
+    
+    # 默认为聊天回复
+    return 'chat_response', CACHE_DURATIONS['chat_response']
+
+def get_enhanced_cache_key(messages, model, temperature, cache_type):
+    """生成增强的缓存键，包含缓存类型信息"""
+    base_content = json.dumps(messages, sort_keys=True).encode() + model.encode() + str(temperature).encode()
+    cache_key = hashlib.md5(base_content).hexdigest()
+    return f"{cache_type}:{cache_key}"
+
 # 阿里云百炼API调用
-def call_qwen_api_with_timeout(messages, api_key=None, model=None, timeout=None):
+def call_qwen_api_with_timeout(messages, api_key=None, model=None, timeout=None, cache_type_hint=None):
     """带超时参数的API调用函数"""
     if not api_key:
         api_key = app.config['QWEN_API_KEY']
@@ -565,18 +616,17 @@ def call_qwen_api_with_timeout(messages, api_key=None, model=None, timeout=None)
     if not timeout:
         timeout = app.config['API_TIMEOUT']
     
-    # 生成缓存键
-    cache_key = hashlib.md5(
-        json.dumps(messages, sort_keys=True).encode() + 
-        model.encode() + 
-        str(app.config['TEMPERATURE']).encode()
-    ).hexdigest()
+    # 确定缓存类型和时间
+    cache_type, cache_duration = get_cache_type_and_duration(messages, cache_type_hint)
+    
+    # 生成增强的缓存键
+    cache_key = get_enhanced_cache_key(messages, model, app.config['TEMPERATURE'], cache_type)
     
     # 检查缓存
     current_time = time.time()
     if cache_key in api_cache:
         cached_data, timestamp = api_cache[cache_key]
-        if current_time - timestamp < CACHE_DURATION:
+        if current_time - timestamp < cache_duration:
             return cached_data
     
     url = app.config['QWEN_API_URL']
@@ -648,11 +698,26 @@ def call_qwen_api_with_timeout(messages, api_key=None, model=None, timeout=None)
             # 缓存结果
             api_cache[cache_key] = (response_text, current_time)
             
-            # 清理过期缓存
-            if len(api_cache) > 100:  # 限制缓存大小
-                expired_keys = [k for k, (_, t) in api_cache.items() if current_time - t > CACHE_DURATION]
+            # 智能缓存清理
+            if len(api_cache) > CACHE_LIMITS['api_cache']:
+                # 清理过期缓存
+                expired_keys = []
+                for k, (_, t) in api_cache.items():
+                    # 根据缓存键中的类型确定过期时间
+                    cache_type_from_key = k.split(':')[0] if ':' in k else 'default'
+                    cache_duration_for_key = CACHE_DURATIONS.get(cache_type_from_key, CACHE_DURATIONS['default'])
+                    if current_time - t > cache_duration_for_key:
+                        expired_keys.append(k)
+                
                 for k in expired_keys:
                     del api_cache[k]
+                
+                # 如果清理后仍然超过限制，删除最旧的缓存
+                if len(api_cache) > CACHE_LIMITS['api_cache']:
+                    sorted_cache = sorted(api_cache.items(), key=lambda x: x[1][1])
+                    excess_count = len(api_cache) - CACHE_LIMITS['api_cache'] + 50  # 多删除50个以避免频繁清理
+                    for i in range(min(excess_count, len(sorted_cache))):
+                        del api_cache[sorted_cache[i][0]]
             
             return response_text
         else:
@@ -662,25 +727,24 @@ def call_qwen_api_with_timeout(messages, api_key=None, model=None, timeout=None)
         print(f"API调用异常: {str(e)}")
         return None
 
-def call_qwen_api(messages, api_key=None, model=None):
+def call_qwen_api(messages, api_key=None, model=None, cache_type_hint=None):
     if not api_key:
         api_key = app.config['QWEN_API_KEY']
     
     if not model:
         model = app.config['DEFAULT_MODEL']
     
-    # 生成缓存键
-    cache_key = hashlib.md5(
-        json.dumps(messages, sort_keys=True).encode() + 
-        model.encode() + 
-        str(app.config['TEMPERATURE']).encode()
-    ).hexdigest()
+    # 确定缓存类型和时间
+    cache_type, cache_duration = get_cache_type_and_duration(messages, cache_type_hint)
+    
+    # 生成增强的缓存键
+    cache_key = get_enhanced_cache_key(messages, model, app.config['TEMPERATURE'], cache_type)
     
     # 检查缓存
     current_time = time.time()
     if cache_key in api_cache:
         cached_data, timestamp = api_cache[cache_key]
-        if current_time - timestamp < CACHE_DURATION:
+        if current_time - timestamp < cache_duration:
             return cached_data
     
     url = app.config['QWEN_API_URL']
@@ -768,22 +832,20 @@ def call_qwen_api(messages, api_key=None, model=None):
 
 # 安全检测函数
 # 安全检测结果缓存
-security_cache = {}
-SECURITY_CACHE_DURATION = 3600  # 1小时缓存
-
 def check_prompt_injection(user_input):
     """检测用户输入是否包含提示词注入攻击"""
     if not user_input or not user_input.strip():
         return False, "输入为空"
     
-    # 生成缓存键
-    cache_key = hashlib.md5(user_input.encode('utf-8')).hexdigest()
+    # 生成安全检测缓存键
+    cache_key = f"security_check:{hashlib.md5(user_input.encode('utf-8')).hexdigest()}"
     
     # 检查缓存
     current_time = time.time()
+    security_cache_duration = CACHE_DURATIONS['security_check']
     if cache_key in security_cache:
         cached_result, timestamp = security_cache[cache_key]
-        if current_time - timestamp < SECURITY_CACHE_DURATION:
+        if current_time - timestamp < security_cache_duration:
             return cached_result
     
     # 先进行基础规则检测
@@ -847,11 +909,25 @@ def check_prompt_injection(user_input):
             # 缓存结果
             security_cache[cache_key] = (detection_result, current_time)
             
-            # 清理过期缓存
-            if len(security_cache) > 200:  # 限制缓存大小
-                expired_keys = [k for k, (_, t) in security_cache.items() if current_time - t > SECURITY_CACHE_DURATION]
+            # 智能缓存清理
+            security_cache_limit = CACHE_LIMITS['security_cache']
+            if len(security_cache) > security_cache_limit:
+                # 首先清理过期条目
+                expired_keys = []
+                for k, (_, timestamp) in security_cache.items():
+                    cache_duration = CACHE_DURATIONS['security_check']
+                    if current_time - timestamp > cache_duration:
+                        expired_keys.append(k)
+                
                 for k in expired_keys:
                     del security_cache[k]
+                
+                # 如果仍然超过限制，删除最旧的条目
+                if len(security_cache) > security_cache_limit:
+                    sorted_items = sorted(security_cache.items(), key=lambda x: x[1][1])
+                    excess_count = len(security_cache) - security_cache_limit
+                    for i in range(excess_count):
+                        del security_cache[sorted_items[i][0]]
             
             return detection_result
         else:
@@ -1212,6 +1288,45 @@ def admin_reset_password(user_id):
     conn.close()
     
     return json_response({'success': True, 'message': f'密码已重置为: {new_password}'})
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_user(user_id):
+    conn = sqlite3.connect(app.config['DATABASE_PATH'])
+    cursor = conn.cursor()
+    
+    # 检查用户是否存在
+    cursor.execute('SELECT id, username, role FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    
+    if not user:
+        conn.close()
+        return json_response({'success': False, 'error': '用户不存在'}, 404)
+    
+    # 防止删除管理员账户
+    if user[2] == 'admin':
+        conn.close()
+        return json_response({'success': False, 'error': '不能删除管理员账户'}, 400)
+    
+    try:
+        # 删除用户相关的聊天历史
+        cursor.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
+        
+        # 删除用户创建的角色
+        cursor.execute('DELETE FROM characters WHERE user_id = ?', (user_id,))
+        
+        # 删除用户
+        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return json_response({'success': True, 'message': f'用户 {user[1]} 删除成功'})
+        
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return json_response({'success': False, 'error': f'删除失败: {str(e)}'}, 500)
 
 @app.route('/api/admin/model-config', methods=['GET', 'POST'])
 @admin_required
@@ -1916,17 +2031,23 @@ def chat_api():
     history_records = cursor.fetchall()
     history_records.reverse()  # 按时间正序排列
     
-    # 获取角色信息
+    # 获取角色信息并验证权限
     character_responses = []
+    user_id = session.get('user_id')
+    
     for char_id in character_ids:
-        cursor.execute('SELECT name, system_prompt FROM characters WHERE id = ?', (char_id,))
+        # 验证角色权限：只能使用默认角色或当前用户创建的角色
+        cursor.execute('''
+            SELECT name, system_prompt FROM characters 
+            WHERE id = ? AND (is_default = 1 OR user_id = ?)
+        ''', (char_id, user_id))
         char_result = cursor.fetchone()
         if char_result:
             char_name, system_prompt = char_result
             
             # 构建包含历史对话的消息列表
             messages = [
-                {'role': 'system', 'content': f"{system_prompt}\n\n当前话题：{topic}\n请保持角色一致性，用你的独特语气回应。基于之前的对话历史，继续自然地参与讨论。\n\n重要：请将回复控制在100字左右，保持简洁而有趣。"}
+                {'role': 'system', 'content': f"{system_prompt}\n\n当前话题：{topic}\n\n【重要对话规则】\n\n1. 禁止使用叙述性描述（如'我点点头'、'我看着'、'我想起'等）\n2. 用你的独特语气和性格表达\n3. 保持角色一致性，基于之前的对话历史自然参与讨论\n4. 回复控制在100字左右，保持简洁而有趣"}
             ]
             
             # 添加历史对话（排除当前用户消息，因为已经在最后添加）
@@ -2079,9 +2200,14 @@ def sanctuary_discuss():
     character_responses = []
     should_generate_image = False
     
-    # 为每个角色生成回复
+    # 为每个角色生成回复并验证权限
+    user_id = session.get('user_id')
     for char_id in character_ids:
-        cursor.execute('SELECT name, system_prompt FROM characters WHERE id = ?', (char_id,))
+        # 验证角色权限：只能使用默认角色或当前用户创建的角色
+        cursor.execute('''
+            SELECT name, system_prompt FROM characters 
+            WHERE id = ? AND (is_default = 1 OR user_id = ?)
+        ''', (char_id, user_id))
         char_result = cursor.fetchone()
         if char_result:
             char_name, base_system_prompt = char_result
@@ -2094,7 +2220,7 @@ def sanctuary_discuss():
 作为第{round_num + 1}轮对话，你需要：
 
 【核心任务】
-1. 深度理解{user_name}的情绪根源和具体困扰
+1. 深度理解用户的情绪根源和具体困扰
 2. 提供实用的解决建议或应对策略
 3. 与其他AI角色协作，形成一致的支持方案
 4. 针对其他角色的观点表达同意/补充/不同看法
@@ -2109,8 +2235,9 @@ def sanctuary_discuss():
 - 可以说"我同意XX的观点"或"我觉得还可以..."来呼应其他角色
 - 保持你的角色特色，但要专业和治愈导向
 - 每次回复50-80字，要有实质内容
-- 在适当时候可以称呼{user_name}的名字，让对话更亲切
-- 如果是最后几轮对话，可以给{user_name}一些温暖的赠语或祝福
+- 可以偶尔自然地称呼用户的名字，但不要每次都提及，保持对话自然流畅
+- 如果是最后几轮对话，可以给用户一些温暖的赠语或祝福
+- 禁止使用叙述性描述（如"我点点头"、"我看着"等）
 
 请给出你的专业建议："""
             
@@ -2456,13 +2583,42 @@ def sanctuary_generate_image():
         
         conn.close()
         
+        # 4. 保存图像到数据库
+        user_session = session.get('user_id', str(uuid.uuid4()))
+        conn = sqlite3.connect(app.config['DATABASE_PATH'])
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO sanctuary_images 
+                (user_session, session_id, title, image_url, prompt, original_emotion, ai_messages, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                user_session,
+                session_id,
+                image_data.get('title', '心灵画作'),
+                image_url,
+                image_data.get('prompt', 'healing artwork'),
+                emotion,
+                json.dumps(ai_messages, ensure_ascii=False),
+                datetime.now().isoformat()
+            ))
+            conn.commit()
+            image_id = cursor.lastrowid
+        except Exception as e:
+            print(f"保存图像到数据库失败: {e}")
+            image_id = None
+        finally:
+            conn.close()
+        
         return json_response({
             'success': True,
             'image_url': image_url,
             'title': image_data.get('title', '心灵画作'),
             'prompt': image_data.get('prompt', 'healing artwork'),
             'ai_messages': ai_messages,
-            'session_id': session_id
+            'session_id': session_id,
+            'image_id': image_id
         })
         
     except Exception as e:
@@ -2470,6 +2626,80 @@ def sanctuary_generate_image():
         conn.close()
         return json_response({'error': '图像生成失败，请重试'}, 500)
     
+@app.route('/api/sanctuary/gallery', methods=['GET'])
+@login_required
+def get_sanctuary_gallery():
+    """获取用户的心情图册"""
+    user_session = session.get('user_id')
+    if not user_session:
+        return json_response({'error': '用户会话无效'}, 401)
+    
+    conn = sqlite3.connect(app.config['DATABASE_PATH'])
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            SELECT id, title, image_url, prompt, original_emotion, ai_messages, created_at
+            FROM sanctuary_images 
+            WHERE user_session = ?
+            ORDER BY created_at DESC
+        ''', (user_session,))
+        
+        images = []
+        for row in cursor.fetchall():
+            image_id, title, image_url, prompt, original_emotion, ai_messages_json, created_at = row
+            try:
+                ai_messages = json.loads(ai_messages_json) if ai_messages_json else []
+            except:
+                ai_messages = []
+            
+            images.append({
+                'id': image_id,
+                'title': title,
+                'image_url': image_url,
+                'prompt': prompt,
+                'original_emotion': original_emotion,
+                'ai_messages': ai_messages,
+                'created_at': created_at
+            })
+        
+        return json_response({'images': images})
+        
+    except Exception as e:
+        print(f"获取心情图册失败: {e}")
+        return json_response({'error': '获取图册失败'}, 500)
+    finally:
+        conn.close()
+
+@app.route('/api/sanctuary/gallery/<int:image_id>', methods=['DELETE'])
+@login_required
+def delete_sanctuary_image(image_id):
+    """删除心情图册中的图像"""
+    user_session = session.get('user_id')
+    if not user_session:
+        return json_response({'error': '用户会话无效'}, 401)
+    
+    conn = sqlite3.connect(app.config['DATABASE_PATH'])
+    cursor = conn.cursor()
+    
+    try:
+        # 验证图像属于当前用户
+        cursor.execute('SELECT id FROM sanctuary_images WHERE id = ? AND user_session = ?', (image_id, user_session))
+        if not cursor.fetchone():
+            return json_response({'error': '图像不存在或无权限删除'}, 404)
+        
+        # 删除图像
+        cursor.execute('DELETE FROM sanctuary_images WHERE id = ? AND user_session = ?', (image_id, user_session))
+        conn.commit()
+        
+        return json_response({'success': True, 'message': '图像已删除'})
+        
+    except Exception as e:
+        print(f"删除心情图册图像失败: {e}")
+        return json_response({'error': '删除失败'}, 500)
+    finally:
+        conn.close()
+
     # 这里可以集成更复杂的人格一致性分析
     # 暂时返回模拟数据
     score = 0.85  # 0-1之间，1表示完全一致
@@ -2514,12 +2744,15 @@ def generate_character_prompt():
 4. 明确角色的行为模式和价值观
 5. 语言要生动有趣，让角色有血有肉
 6. 长度控制在200-400字之间
+7. 禁止使用叙述性描述（如'我点点头'、'我看着'、'我想起'等描述）
 
 请直接输出系统提示词内容，不要包含其他解释文字。'''
     
+    # 为重新生成请求添加时间戳，避免缓存问题
+    timestamp = int(time.time() * 1000)  # 毫秒级时间戳
     messages = [
         {'role': 'system', 'content': system_message},
-        {'role': 'user', 'content': f'请为以下角色描述生成系统提示词：{description}'}
+        {'role': 'user', 'content': f'请为以下角色描述生成系统提示词：{description}（生成时间：{timestamp}）'}
     ]
     
     # 多次重试机制
@@ -2528,7 +2761,7 @@ def generate_character_prompt():
     
     for attempt in range(max_retries):
         try:
-            response = call_qwen_api(messages, api_key)
+            response = call_qwen_api(messages, api_key, cache_type_hint='character_generation')
             if response:
                 break
             else:
@@ -2551,7 +2784,9 @@ def generate_character_prompt():
 - 具有独特的说话风格
 - 能够进行有趣的对话
 
-请保持角色的一致性，用你独特的方式与用户互动。在对话中展现你的个性特色，让每次交流都充满趣味。'''
+请保持角色的一致性，用你独特的方式与用户互动。在对话中展现你的个性特色，让每次交流都充满趣味。
+
+禁止使用叙述性描述（如"我点点头"、"我看着"、"我想起"等描述）。'''
         
         response = fallback_prompt
         print(f"使用备用角色提示词模板")
@@ -2560,6 +2795,7 @@ def generate_character_prompt():
 
 # Persona Undercover 游戏API
 @app.route('/api/game/start', methods=['POST'])
+@login_required
 def start_game():
     """开始新游戏"""
     data = request.json
@@ -2573,6 +2809,18 @@ def start_game():
     
     conn = sqlite3.connect(app.config['DATABASE_PATH'])
     cursor = conn.cursor()
+    
+    # 验证所有选择的角色权限
+    user_id = session.get('user_id')
+    for char_data in selected_characters:
+        char_id = char_data.get('id')
+        cursor.execute('''
+            SELECT id FROM characters 
+            WHERE id = ? AND (is_default = 1 OR user_id = ?)
+        ''', (char_id, user_id))
+        if not cursor.fetchone():
+            conn.close()
+            return json_response({'error': f'您没有权限使用角色ID {char_id}'}, 403)
     
     # 处理词汇对
     if custom_words:
@@ -2743,6 +2991,7 @@ def character_describe():
 - 保持模糊性：用"那种感觉"、"某种体验"等模糊表达
 - 情绪化表达：引发共鸣但不暴露具体信息
 - 保持你的角色性格和语气习惯{context_info}
+- 禁止使用叙述性描述（如"我点点头"、"我看着"等）
 
 **要求**：请直接说出你的描述，用1句自然的话语表达（35~50字），不要重复他人的角度，保持你的角色特色。
 '''
@@ -2765,6 +3014,9 @@ def character_describe():
 - 联想型：它让你想到什么东西或回忆，但不要太直接
 - 抽象感受：它给你带来的情绪或氛围
 - 功能暗示：用模糊的方式暗示用途，但不要太明显{context_info}
+
+**重要对话规则**：
+- 禁止使用叙述性描述（如"我点点头"、"我看着"等）
 
 **要求**：请直接说出你的描述，用1句符合角色性格的自然话语（35~50字），避免重复他人的表达方式。
 '''
